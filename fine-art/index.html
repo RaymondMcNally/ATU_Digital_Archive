@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fine Art — ATU Sligo</title>
+
+<!-- ==========================================================================
+     ARCHITECTURE MODEL ARCHIVE — 3D Gaussian Splat gallery + admin
+     Self-contained, static. Host anywhere (GitHub Pages, Netlify, ATU web).
+
+     HOW DATA WORKS
+       - The public gallery loads "projects.json" from beside this page.
+       - The admin (footer link "Manage archive", or add #admin to the URL) lets
+         you add / edit / delete / reorder projects through a form. Changes save
+         in THIS browser as you work.
+       - To publish for everyone: in the admin, hit "Export projects.json" and
+         upload the downloaded file beside this page (replacing the old one).
+       - Thumbnails: screenshot your framed model and drop it in the form. To keep
+         the data file light for a large archive, host images in a /posters/
+         folder and paste the path instead of embedding the screenshot.
+
+     COLLECTIONS (model types + their order) are set in the config block below.
+     ========================================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;450;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#F7F7F5; --paper-2:#FFFFFF;
+    --ink:#17191A; --slate:#63696B;
+    --hair:#E3E1DB; --teal:#2E5E5B; --teal-tint:#EAF0EF;
+    --shadow:0 1px 2px rgba(23,25,26,.05); --sheet:1180px;
+  }
+  html[data-theme="dark"]{
+    --paper:#121415; --paper-2:#1A1D1E;
+    --ink:#ECEDEC; --slate:#969B9C;
+    --hair:#2A2E2F; --teal:#66ABA4; --teal-tint:#1B2B29;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-weight:400;line-height:1.55;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+  a{color:inherit;text-decoration:none}
+  .sheet{max-width:var(--sheet);margin:0 auto;padding:0 28px}
+  body.admin-mode .public{display:none}
+  #admin{display:none}
+  body.admin-mode #admin{display:block}
+
+  /* strip / masthead */
+  .strip{display:flex;justify-content:space-between;align-items:center;padding:22px 0 26px}
+  .logo{display:inline-flex;align-items:center;height:34px}
+  .logo img{height:34px;width:auto;display:block}
+  .logo-mark{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;letter-spacing:.14em;border:1.5px solid var(--ink);padding:6px 11px 5px;border-radius:3px}
+  .theme{appearance:none;background:none;border:1px solid var(--hair);border-radius:999px;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:border-color .15s}
+  .theme:hover{border-color:var(--slate)}
+  .theme svg{width:17px;height:17px}
+  .titleblock{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--ink)}
+  .institution{font-size:13px;color:var(--slate);line-height:1.45;max-width:24ch}
+  .institution strong{color:var(--ink);font-weight:500}
+  .collection-name{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(30px,5.2vw,52px);letter-spacing:-.02em;line-height:1.02;margin:.28em 0 0}
+  .index-meta{font-family:"Space Grotesk",sans-serif;font-size:13px;color:var(--slate);text-align:right;line-height:1.5;white-space:nowrap}
+  .index-meta b{color:var(--ink);font-weight:500}
+  .intro{max-width:60ch;margin:22px 0 0;color:var(--slate);font-size:16.5px;line-height:1.6}
+
+  /* controls */
+  .controls{margin:34px 0 8px}
+  .search{position:relative;max-width:420px;margin-bottom:22px}
+  .search input{width:100%;font-family:inherit;font-size:15.5px;color:var(--ink);background:var(--paper-2);border:1px solid var(--hair);border-radius:6px;padding:12px 40px;transition:border-color .15s}
+  .search input:focus{outline:none;border-color:var(--teal)}
+  .search input::placeholder{color:var(--slate)}
+  .search .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--slate);pointer-events:none}
+  .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--slate);cursor:pointer;font-size:18px;width:28px;height:28px;border-radius:50%;display:none;line-height:1}
+  .search .clear:hover{color:var(--ink);background:var(--teal-tint)}
+  .search.has-text .clear{display:inline-flex;align-items:center;justify-content:center}
+  .filter-row{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:baseline;margin-bottom:12px}
+  .filter-row .axis{font-size:12.5px;color:var(--slate);min-width:42px}
+  .filter{appearance:none;background:none;border:none;padding:2px 0;cursor:pointer;font-family:inherit;font-size:14.5px;color:var(--slate);border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
+  .filter:hover{color:var(--ink)}
+  .filter[aria-pressed="true"]{color:var(--ink);border-color:var(--teal)}
+  .filter .count{font-size:11.5px;color:var(--slate);margin-left:5px}
+  .status{font-size:13.5px;color:var(--slate);margin:18px 0 0;display:none}
+  .status.on{display:block}
+  .status button{background:none;border:none;color:var(--teal);cursor:pointer;font:inherit;padding:0 0 0 4px;text-decoration:underline}
+
+  /* results / plates */
+  #results{padding:28px 0 40px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:30px 26px}
+  .lead{margin-bottom:44px}
+  .collection{margin-bottom:52px}
+  .collection-head{display:flex;align-items:baseline;gap:12px;margin:0 0 22px;padding-bottom:10px;border-bottom:1px solid var(--hair)}
+  .collection-head h2{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:20px;letter-spacing:-.01em;margin:0}
+  .collection-head .c-count{font-size:13px;color:var(--slate)}
+  .plate{display:flex;flex-direction:column;text-align:left;background:none;border:none;padding:0;margin:0;cursor:pointer;font-family:inherit;color:inherit}
+  .poster{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border:1px solid var(--hair);border-radius:3px;background:var(--paper-2);box-shadow:var(--shadow)}
+  .featured .poster{aspect-ratio:21/9}
+  .poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+  .plate:hover .poster img{transform:scale(1.02)}
+  .poster::after{content:"";position:absolute;inset:0;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(46,94,91,0);transition:box-shadow .18s;pointer-events:none}
+  .plate:hover .poster::after,.plate:focus-visible .poster::after{box-shadow:inset 0 0 0 2px var(--teal)}
+  .plate:focus-visible{outline:none}
+  .ph{position:absolute;inset:0;display:flex;align-items:flex-end;padding:18px}
+  .ph-title{font-family:"Space Grotesk",sans-serif;font-size:15px;color:rgba(255,255,255,.92);line-height:1.2}
+  .badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:rgba(23,25,26,.55);backdrop-filter:blur(2px);padding:4px 9px;border-radius:999px;letter-spacing:.02em}
+  .badge .dot{width:5px;height:5px;border-radius:50%;background:#fff}
+  .badge-vr{left:auto;right:12px;background:rgba(46,94,91,.92)}
+  .badge-vr svg{width:14px;height:14px}
+  .caption{padding:14px 2px 0}
+  .plate-title{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:18px;letter-spacing:-.01em;line-height:1.25;margin:0}
+  .featured .plate-title{font-size:24px}
+  .plate-author{font-size:14.5px;color:var(--ink);margin:3px 0 0}
+  .plate-lead{font-size:14.5px;color:var(--slate);margin:8px 0 0;max-width:52ch}
+  .plate-sub{font-size:13px;color:var(--slate);margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap}
+  .empty{padding:20px 0 60px;max-width:46ch}
+  .empty h3{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:20px;margin:0 0 8px}
+  .empty p{margin:0;color:var(--slate)}
+
+  /* viewer modal */
+  .viewer{position:fixed;inset:0;z-index:50;background:#0C0E0F;display:none;flex-direction:column}
+  .viewer.on{display:flex}
+  .viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 20px;color:#E8E8E6;border-bottom:1px solid rgba(255,255,255,.08)}
+  .viewer-bar .v-title{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:16px;letter-spacing:-.01em}
+  .viewer-bar .v-sub{font-size:13px;color:#8B9092;margin-top:1px}
+  .v-actions{display:flex;gap:10px}
+  .v-btn{appearance:none;background:none;border:1px solid rgba(255,255,255,.18);color:#E8E8E6;border-radius:4px;padding:7px 13px;font-family:inherit;font-size:14px;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap}
+  .v-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.32)}
+  .v-btn[aria-pressed="true"]{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4)}
+  .viewer-body{flex:1;display:flex;min-height:0}
+  .viewer-stage{flex:1;position:relative;min-width:0}
+  .viewer-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0C0E0F}
+  .vr-flag{position:absolute;top:14px;left:14px;z-index:2;display:inline-flex;align-items:center;gap:7px;background:rgba(46,94,91,.94);color:#fff;padding:7px 12px 7px 11px;border-radius:999px;font-size:13px;pointer-events:none;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+  .vr-flag svg{width:16px;height:16px}
+  .v-empty{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px;max-width:520px;margin:0 auto;padding:0 28px;color:#C9CCCD}
+  .v-empty h3{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:22px;color:#F1F2F2;margin:0}
+  .v-empty p{margin:0;font-size:15px;line-height:1.6;color:#9BA0A2}
+  .v-empty code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px;font-size:13px}
+  .v-rail{width:340px;flex-shrink:0;border-left:1px solid rgba(255,255,255,.08);background:#0F1112;color:#D7D9D9;overflow:auto;display:none;padding:26px 24px}
+  .viewer.info-open .v-rail{display:block}
+  .v-rail .r-author{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:20px;color:#F1F2F2;letter-spacing:-.01em}
+  .v-rail .r-title{font-size:15px;color:#9BA0A2;margin:3px 0 22px}
+  .v-meta{display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font-size:14px;margin-bottom:24px}
+  .v-meta dt{color:#7E8385}.v-meta dd{margin:0;color:#D7D9D9}
+  .r-notes-h{font-size:12.5px;color:#7E8385;margin:0 0 8px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
+  .r-notes{font-size:14.5px;line-height:1.62;color:#C9CCCD;margin:0;white-space:pre-wrap}
+  .r-notes.empty-note{color:#6C7173;font-style:italic}
+
+  footer{border-top:1px solid var(--hair);padding:26px 0 46px;color:var(--slate);font-size:13.5px}
+  footer .sheet{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+  .manage-link{background:none;border:none;color:var(--slate);cursor:pointer;font:inherit;text-decoration:underline;text-underline-offset:3px}
+  .manage-link:hover{color:var(--ink)}
+
+  /* ---------- ADMIN ---------- */
+  .admin-bar{position:sticky;top:0;z-index:5;background:var(--paper);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 28px;border-bottom:1px solid var(--hair)}
+  .admin-title{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:18px}
+  .admin-bar-actions{display:flex;gap:9px;flex-wrap:wrap}
+  .abtn{appearance:none;font-family:inherit;font-size:14px;border-radius:5px;padding:8px 14px;cursor:pointer;border:1px solid var(--hair);background:var(--paper-2);color:var(--ink);transition:border-color .15s,background .15s}
+  .abtn:hover{border-color:var(--slate)}
+  .abtn.accent{background:var(--teal);border-color:var(--teal);color:#fff}
+  .abtn.accent:hover{filter:brightness(1.06)}
+  .abtn.ghost{background:none}
+  .abtn.danger{color:#B23A48;border-color:transparent}
+  .abtn.danger:hover{border-color:#B23A48;background:transparent}
+  .admin-wrap{padding-top:26px;padding-bottom:70px}
+  .admin-note{font-size:14px;color:var(--slate);background:var(--teal-tint);border-radius:8px;padding:13px 16px;margin:0 0 26px;line-height:1.55}
+  .admin-note b{color:var(--ink)}
+  .gh-panel{display:none;border:1px solid var(--hair);border-radius:10px;padding:20px;margin:0 0 24px;background:var(--paper-2)}
+  .gh-panel.on{display:block}
+  .gh-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.gh-grid{grid-template-columns:1fr}}
+  .gh-panel label{display:block;font-size:13px;color:var(--slate);margin:0 0 6px}
+  .gh-panel input{width:100%;font-family:inherit;font-size:14.5px;color:var(--ink);background:var(--paper);border:1px solid var(--hair);border-radius:6px;padding:9px 11px}
+  .gh-panel input:focus{outline:none;border-color:var(--teal)}
+  .pub-status{font-size:13.5px;margin:0 0 22px;min-height:1.1em}
+  .pub-status.ok{color:var(--teal)} .pub-status.err{color:#B23A48} .pub-status.busy{color:var(--slate)}
+  .admin-cols{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}
+  @media (max-width:900px){.admin-cols{grid-template-columns:1fr;gap:40px}}
+
+  .form label{display:block;font-size:13px;color:var(--slate);margin:0 0 6px}
+  .field{margin-bottom:18px}
+  .field.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form input[type=text],.form input[type=url],.form textarea,.form select{
+    width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:var(--paper-2);
+    border:1px solid var(--hair);border-radius:6px;padding:10px 12px;transition:border-color .15s}
+  .form input:focus,.form textarea:focus,.form select:focus{outline:none;border-color:var(--teal)}
+  .form textarea{resize:vertical;min-height:84px;line-height:1.5}
+  .req{color:#B23A48}
+  .hint{font-size:12.5px;color:var(--slate);margin:6px 0 0;line-height:1.5}
+  .check{display:flex;align-items:center;gap:9px;font-size:14.5px;color:var(--ink);cursor:pointer}
+  .check input{width:16px;height:16px;accent-color:var(--teal)}
+
+  .preview-embed{margin-top:10px;border:1px solid var(--hair);border-radius:8px;overflow:hidden;background:#0C0E0F;display:none}
+  .preview-embed.on{display:block}
+  .preview-embed iframe{width:100%;height:230px;border:0;display:block}
+  .preview-embed .cap{font-size:12.5px;color:#9BA0A2;padding:8px 12px;background:#0F1112}
+
+  .drop{border:1.5px dashed var(--hair);border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:var(--slate);font-size:14px;transition:border-color .15s,background .15s;background:var(--paper-2)}
+  .drop:hover,.drop.over{border-color:var(--teal);background:var(--teal-tint)}
+  .thumb-prev{position:relative;margin-top:12px;display:none}
+  .thumb-prev.on{display:block}
+  .thumb-prev img{width:100%;max-width:280px;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--hair);display:block}
+  .thumb-prev .rm{position:absolute;top:8px;left:calc(min(280px,100%) - 34px);background:rgba(23,25,26,.7);color:#fff;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:15px}
+  .form-actions{display:flex;gap:10px;margin-top:8px}
+
+  .admin-list-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px}
+  .admin-list-head h3{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:18px;margin:0}
+  .admin-list-head span{font-size:13px;color:var(--slate)}
+  .row{display:flex;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--hair)}
+  .row .rthumb{width:66px;height:50px;border-radius:4px;object-fit:cover;border:1px solid var(--hair);flex-shrink:0;background:var(--paper-2)}
+  .row .rmeta{flex:1;min-width:0}
+  .row .rname{font-size:14.5px;font-weight:450;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .rsub{font-size:12.5px;color:var(--slate);margin-top:2px}
+  .row .rstar{color:var(--teal);font-size:12px}
+  .row .racts{display:flex;gap:4px;flex-shrink:0}
+  .iconbtn{background:none;border:1px solid transparent;border-radius:5px;width:30px;height:30px;cursor:pointer;color:var(--slate);font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+  .iconbtn:hover{border-color:var(--hair);color:var(--ink)}
+  .iconbtn:disabled{opacity:.3;cursor:default}
+  .list-empty{color:var(--slate);font-size:14px;padding:22px 0}
+
+  @media (max-width:760px){.viewer-body{flex-direction:column}.v-rail{width:auto;max-height:48%;border-left:none;border-top:1px solid rgba(255,255,255,.08)}}
+  @media (max-width:640px){.strip{padding:16px 0 18px}.grid{gap:26px 18px}.index-meta{text-align:left}.field.row2{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.plate:hover .poster img{transform:none}}
+</style>
+</head>
+<body>
+
+<!-- ===================== PUBLIC ===================== -->
+<div class="public">
+  <div class="sheet">
+    <div class="strip">
+      <a class="logo" href="../index.html" aria-label="Design Archive — home"><img id="logo-img" src="../logo.png" alt="ATU Sligo"></a>
+      <button class="theme" id="theme-btn" aria-label="Switch colour theme"></button>
+    </div>
+  </div>
+
+  <header id="top">
+    <div class="sheet">
+      <div class="titleblock">
+        <div>
+          <p class="institution"><a href="../index.html" style="color:var(--teal)">← Design Archive</a><br>ATU Sligo · School of the Built Environment &amp; Design</p>
+          <h1 class="collection-name" id="collection-name">Architecture Model Archive</h1>
+        </div>
+        <p class="index-meta">Sheet A—01<br><b id="count-label">0</b> models</p>
+      </div>
+      <p class="intro" id="intro"></p>
+
+      <div class="controls">
+        <div class="search" id="search">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="q" type="search" placeholder="Search by artist, model type or year" aria-label="Search models" autocomplete="off">
+          <button class="clear" id="q-clear" aria-label="Clear search">&times;</button>
+        </div>
+        <div class="filter-row" id="type-filters"><span class="axis">Type</span></div>
+        <div class="filter-row" id="year-filters"><span class="axis">Year</span></div>
+        <div class="filter-row" id="vr-filter-row"><span class="axis">View</span><button type="button" class="filter" id="vr-filter" aria-pressed="false">VR-ready<span class="count" id="vr-count"></span></button></div>
+        <p class="status" id="status"></p>
+      </div>
+    </div>
+  </header>
+
+  <main class="sheet"><div id="results"></div></main>
+
+  <footer>
+    <div class="sheet">
+      <span id="footer-left"></span>
+      <button class="manage-link" id="manage-link">Manage archive</button>
+    </div>
+  </footer>
+</div>
+
+<!-- ===================== ADMIN ===================== -->
+<section id="admin">
+  <div class="admin-bar">
+    <div class="admin-title">Manage archive</div>
+    <div class="admin-bar-actions">
+      <button class="abtn accent" id="publish-btn">Publish live</button>
+      <button class="abtn ghost" id="gh-setup-btn">Publish setup</button>
+      <button class="abtn ghost" id="export-btn">Export projects.json</button>
+      <button class="abtn ghost" id="import-btn">Import…</button>
+      <input id="import-file" type="file" accept="application/json" hidden>
+      <button class="abtn ghost" id="pull-btn">Reload published</button>
+      <button class="abtn" id="exit-admin">View site</button>
+    </div>
+  </div>
+  <div class="admin-wrap sheet">
+    <p class="admin-note">Changes save in <b>this browser</b> as you work. To update the live site for everyone, either <b>Publish live</b> (commits to your repo) or <b>Export projects.json</b> and upload it beside this page.</p>
+    <div id="gh-panel" class="gh-panel">
+      <div class="gh-grid">
+        <div><label>GitHub owner</label><input type="text" id="gh-owner" placeholder="e.g. rmcnally"></div>
+        <div><label>Repository</label><input type="text" id="gh-repo" placeholder="e.g. design-archive"></div>
+        <div><label>Branch</label><input type="text" id="gh-branch" placeholder="main"></div>
+        <div><label>File path in repo</label><input type="text" id="gh-path" placeholder="architecture/projects.json"></div>
+      </div>
+      <div style="margin-top:14px"><label>Access token — fine-grained, Contents: read &amp; write on this repo</label><input type="password" id="gh-token" placeholder="github_pat_…"></div>
+      <p class="hint">Stored only in this browser, never written into the site files. Scope the token to just this repository and use it only on a trusted machine.</p>
+      <div class="form-actions"><button type="button" class="abtn accent" id="gh-save">Save settings</button><button type="button" class="abtn ghost" id="gh-close">Close</button></div>
+    </div>
+    <p class="pub-status" id="pub-status"></p>
+    <div class="admin-cols">
+
+      <form class="form" id="proj-form" autocomplete="off">
+        <div class="field row2">
+          <div><label>Artist name <span class="req">*</span></label><input type="text" id="f-author" required></div>
+          <div><label>Project title <span class="req">*</span></label><input type="text" id="f-title" required></div>
+        </div>
+        <div class="field row2">
+          <div><label>Model type</label><input type="text" id="f-type" list="type-options" placeholder="e.g. Site"><datalist id="type-options"></datalist></div>
+          <div><label>Year</label><input type="text" id="f-year" placeholder="e.g. 2024/25"></div>
+        </div>
+        <div class="field"><label>Studio / brief</label><input type="text" id="f-studio" placeholder="e.g. Studio 1 — Dwelling"></div>
+
+        <div class="field">
+          <label>Model — just the .sog filename (or a viewer URL / superspl.at link)</label>
+          <input type="text" id="f-viewer" placeholder="e.g. model-name.sog">
+          <p class="hint">Type only the <b>.sog</b> filename — the file must sit in this catalogue's <code>models</code> folder, and it opens in your own viewer automatically. A full viewer URL or superspl.at link also works. The live model loads below so you can frame a thumbnail.</p>
+          <div class="preview-embed" id="preview-embed">
+            <iframe id="preview-frame" allow="fullscreen; xr-spatial-tracking" title="Model preview"></iframe>
+            <div class="cap">Frame your best view, take a screenshot, and drop it in the thumbnail below.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Thumbnail</label>
+          <div class="drop" id="drop">Drop a screenshot here, or click to choose an image</div>
+          <input type="file" id="f-thumb-file" accept="image/*" hidden>
+          <input type="text" id="f-thumb-url" placeholder="…or paste an image path, e.g. posters/name.jpg" style="margin-top:10px">
+          <p class="hint">Leave empty and a placeholder plate (colour-coded by type) is drawn automatically.</p>
+          <div class="thumb-prev" id="thumb-prev"><img id="thumb-img" alt=""><button type="button" class="rm" id="thumb-rm" aria-label="Remove thumbnail">&times;</button></div>
+        </div>
+
+        <div class="field"><label>Caption <span style="color:var(--slate)">(lead plate only)</span></label><input type="text" id="f-caption"></div>
+        <div class="field"><label>Teaching notes</label><textarea id="f-notes" placeholder="Shown in the viewer's Notes panel."></textarea></div>
+        <div class="field"><label class="check"><input type="checkbox" id="f-consent"> Show the artist's full name publicly</label><p class="hint">Off = public pages show first name + initial only. The full name is always kept here for your records.</p></div>
+        <div class="field"><label class="check"><input type="checkbox" id="f-xr"> Suitable for VR / XR viewing</label><p class="hint" id="xr-hint">Adds a VR badge and a headset symbol on the viewer. Leave off for large scenes that run poorly in a headset.</p></div>
+        <div class="field"><label class="check"><input type="checkbox" id="f-featured"> Feature as the lead plate</label></div>
+
+        <div class="form-actions">
+          <button type="submit" class="abtn accent" id="submit-btn">Add project</button>
+          <button type="button" class="abtn ghost" id="cancel-btn" style="display:none">Cancel edit</button>
+        </div>
+      </form>
+
+      <div class="admin-list-col">
+        <div class="admin-list-head"><h3>Projects</h3><span id="admin-count"></span></div>
+        <div id="admin-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- viewer -->
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="v-title">
+  <div class="viewer-bar">
+    <div><div class="v-title" id="v-title">—</div><div class="v-sub" id="v-sub"></div></div>
+    <div class="v-actions">
+      <button class="v-btn" id="v-info" aria-pressed="true">Notes</button>
+      <button class="v-btn" id="v-close" aria-label="Close viewer">Close</button>
+    </div>
+  </div>
+  <div class="viewer-body">
+    <div class="viewer-stage" id="v-stage"></div>
+    <aside class="v-rail" id="v-rail"></aside>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   CONFIG — masthead + collection order
+   ========================================================================== */
+const SITE = {
+  collection:"Fine Art",
+  intro:"Sculpture, installation and exhibition work scanned in the round. Browse by collection, or search for an artist, model type or year.",
+  footer:"Fine Art · ATU Sligo",
+  logo:"../logo.png"
+};
+const COLLECTIONS = ["Sculpture", "Installation", "Ceramics", "Mixed Media", "Exhibition"];
+
+/* Self-hosted viewer. Point this at YOUR copy of the SuperSplat viewer bundle
+   (the open-source @playcanvas/supersplat-viewer, hosted on your own server).
+   Then a project's link can just be a path to a .sog file and it's opened in
+   your viewer — no superspl.at involved. Set to "" to disable and only use
+   full URLs. Extra viewer flags (e.g. "&noui") can be appended in VIEWER_PARAMS. */
+const VIEWER_BASE = "../viewer/index.html";   // e.g. "/viewer/" or "../viewer/" relative to this portal
+const VIEWER_PARAMS = "&webgl";      // force the compatible WebGL renderer (add "&noui" to hide the UI)
+const MODELS_BASE = "../models/fine-art/";  // this catalogue's models folder; a bare .sog filename is looked up here
+const GITHUB = { owner:"", repo:"", branch:"main", path:"fine-art/projects.json" };  // optional: publish projects.json to a GitHub repo
+
+/* Turn a stored link into an actual viewer URL:
+   - a full http(s) URL (superspl.at or absolute) is used as-is
+   - a scene file (.sog / .ply / .compressed.ply / .json) is wrapped in VIEWER_BASE
+   - anything else (e.g. viewers/x/index.html) is treated as a ready viewer path */
+function resolveViewer(v){
+  if(!v) return '';
+  let s=v.trim();
+  if(/^https?:\/\//i.test(s)) return s;                      // full URL (superspl.at / absolute) as-is
+  if(/(\.sog|\.compressed\.ply|\.ply)$/i.test(s)){          // a scene file in ANY path form
+    const name=s.split('/').pop();                            // -> use just the filename
+    return `${VIEWER_BASE}?content=${(MODELS_BASE+name).replace(/ /g,'%20')}${VIEWER_PARAMS}`;
+  }
+  return s;                                                    // an already-built viewer path (index.html)
+}
+
+/* Fallback seed — used only if projects.json is absent and nothing is saved yet.
+   Once you Export projects.json and upload it, that file becomes the source. */
+const SAMPLE = [
+  {
+    "title": "Standing Figure",
+    "author": "Méabh Lynch",
+    "type": "Sculpture",
+    "year": "2024/25",
+    "studio": "Degree Show",
+    "caption": "A plaster figure scanned in the round for the degree-show archive.",
+    "poster": "",
+    "viewer": "",
+    "consent": true,
+    "xr": true,
+    "featured": true
+  },
+  {
+    "title": "Vessel Series",
+    "author": "Tadhg Moran",
+    "type": "Ceramics",
+    "year": "2024/25",
+    "studio": "Studio",
+    "poster": "",
+    "viewer": "",
+    "consent": false
+  },
+  {
+    "title": "Gallery 2 — Degree Show",
+    "author": "Group exhibition",
+    "type": "Exhibition",
+    "year": "2023/24",
+    "studio": "Degree Show",
+    "notes": "Whole-room capture of the 2024 degree show, Gallery 2.",
+    "poster": "",
+    "viewer": "",
+    "consent": true
+  }
+];
+
+/* ==========================================================================
+   State + persistence
+   ========================================================================== */
+let DATA = [];
+let editIndex = null;
+let pendingThumb = "";     // data URL or path for the form
+let lastFocused = null;
+
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function read(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+const ARCHIVE_ID = SITE.collection.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+const STORE = 'archive-data-' + ARCHIVE_ID;   // per-catalogue key (was a single shared key)
+function save(){ store(STORE, JSON.stringify(DATA)); }
+
+const $ = id => document.getElementById(id);
+$('collection-name').textContent = SITE.collection;
+$('intro').textContent = SITE.intro;
+$('footer-left').textContent = SITE.footer;
+
+/* logo */
+const logoImg = $('logo-img'); logoImg.src = SITE.logo;
+logoImg.onerror = () => { logoImg.parentElement.innerHTML = '<span class="logo-mark">ATU</span>'; };
+
+/* theme */
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const themeBtn=$('theme-btn');
+function setTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.innerHTML=t==='dark'?SUN:MOON; store('archive-theme',t); }
+setTheme(read('archive-theme') || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+themeBtn.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+
+/* ==========================================================================
+   Gallery
+   ========================================================================== */
+const results=$('results'), statusEl=$('status'), searchWrap=$('search'), qInput=$('q');
+const state={ q:'', type:'All', year:'All', xr:false };
+const TYPE_HUE={ Concept:210, Site:150, Sectional:32, Detail:266, Technology:190 };
+function placeholder(type){ const h=TYPE_HUE[type]??176; return `linear-gradient(150deg, hsl(${h} 32% 26%), hsl(${h+16} 22% 15%))`; }
+
+function years(){ const s=[]; DATA.forEach(p=>{ if(p.year && !s.includes(p.year)) s.push(p.year); }); return s.sort().reverse(); }
+function typesInOrder(){
+  const extra=[...new Set(DATA.map(p=>p.type).filter(t=>t && !COLLECTIONS.includes(t)))];
+  return [...COLLECTIONS.filter(t=>DATA.some(p=>p.type===t)), ...extra];
+}
+function chip(label,val,axis,count){
+  const b=document.createElement('button');
+  b.className='filter'; b.dataset.axis=axis; b.dataset.val=val;
+  b.setAttribute('aria-pressed', state[axis]===val);
+  b.innerHTML = count==null?label:`${label}<span class="count">${count}</span>`;
+  b.onclick=()=>{ state[axis]=val; render(); };
+  return b;
+}
+function rebuildFilters(){
+  const tf=$('type-filters'), yf=$('year-filters');
+  tf.querySelectorAll('.filter').forEach(n=>n.remove());
+  yf.querySelectorAll('.filter').forEach(n=>n.remove());
+  tf.appendChild(chip('All','All','type',DATA.length));
+  typesInOrder().forEach(t=>tf.appendChild(chip(t,t,'type',DATA.filter(p=>p.type===t).length)));
+  yf.appendChild(chip('All','All','year',null));
+  years().forEach(y=>yf.appendChild(chip(y,y,'year',DATA.filter(p=>p.year===y).length)));
+  $('count-label').textContent=DATA.length;
+  { const vc=$('vr-count'); if(vc) vc.textContent=DATA.filter(p=>p.xr).length; }
+}
+function syncFilters(){ document.querySelectorAll('#type-filters .filter,#year-filters .filter').forEach(b=>b.setAttribute('aria-pressed', state[b.dataset.axis]===b.dataset.val)); }
+
+qInput.addEventListener('input',()=>{ state.q=qInput.value; searchWrap.classList.toggle('has-text',!!qInput.value); render(); });
+$('q-clear').onclick=()=>{ qInput.value=''; state.q=''; searchWrap.classList.remove('has-text'); render(); qInput.focus(); };
+const vrBtn=$('vr-filter'); vrBtn.onclick=()=>{ state.xr=!state.xr; vrBtn.setAttribute('aria-pressed',state.xr); render(); };
+
+function matches(p){
+  const okT=state.type==='All'||p.type===state.type;
+  const okY=state.year==='All'||p.year===state.year;
+  const q=state.q.trim().toLowerCase();
+  const hay=[p.title,p.author,p.type,p.year,p.studio].filter(Boolean).join(' ').toLowerCase();
+  const okXR=!state.xr||!!p.xr;
+  return okT&&okY&&okXR&&(!q||hay.includes(q));
+}
+const isDefault=()=>state.q.trim()===''&&state.type==='All'&&state.year==='All'&&!state.xr;
+
+function card(p,featured){
+  const btn=document.createElement('button');
+  btn.className='plate'+(featured?' featured':''); btn.type='button';
+  const poster=document.createElement('div'); poster.className='poster';
+  if(p.poster){ const img=document.createElement('img'); img.src=p.poster; img.alt=`${p.title} by ${maskName(p.author,p.consent)}`; img.loading='lazy'; poster.appendChild(img); }
+  else { poster.style.background=placeholder(p.type); poster.innerHTML=`<div class="ph"><div class="ph-title">${esc(p.title)}</div></div>`; }
+  poster.insertAdjacentHTML('beforeend',`<span class="badge"><span class="dot"></span>${p.type?esc(p.type)+' model':'3D model'}</span>`);
+  if(p.xr) poster.insertAdjacentHTML('beforeend',`<span class="badge badge-vr">${VR_ICON}VR</span>`);
+  const cap=document.createElement('div'); cap.className='caption';
+  const sub=[p.year,p.studio].filter(Boolean).map(s=>`<span>${esc(s)}</span>`).join('');
+  cap.innerHTML=`<h2 class="plate-title">${esc(p.title)}</h2><p class="plate-author">${esc(maskName(p.author,p.consent))}</p>${featured&&p.caption?`<p class="plate-lead">${esc(p.caption)}</p>`:''}<div class="plate-sub">${sub}</div>`;
+  btn.append(poster,cap);
+  btn.onclick=()=>openViewer(p,btn);
+  return btn;
+}
+function render(){
+  syncFilters();
+  results.innerHTML='';
+  const list=DATA.filter(matches);
+  if(!isDefault()){
+    statusEl.classList.add('on');
+    statusEl.innerHTML=`Showing ${list.length} of ${DATA.length} models<button id="reset">Clear all</button>`;
+    $('reset').onclick=()=>{ state.q=''; state.type='All'; state.year='All'; qInput.value=''; searchWrap.classList.remove('has-text'); render(); };
+  } else statusEl.classList.remove('on');
+  if(list.length===0){ results.innerHTML=`<div class="empty"><h3>No models match</h3><p>Try a different artist name, model type or year — or clear the filters to see everything.</p></div>`; return; }
+  if(isDefault()){
+    const feat=DATA.find(p=>p.featured);
+    if(feat){ const lead=document.createElement('div'); lead.className='grid lead'; lead.appendChild(card(feat,true)); results.appendChild(lead); }
+    typesInOrder().forEach(type=>{
+      const items=DATA.filter(p=>p.type===type&&!p.featured);
+      if(!items.length) return;
+      const sec=document.createElement('section'); sec.className='collection';
+      sec.innerHTML=`<div class="collection-head"><h2>${esc(type)} models</h2><span class="c-count">${items.length}</span></div>`;
+      const g=document.createElement('div'); g.className='grid';
+      items.forEach(p=>g.appendChild(card(p,false)));
+      sec.appendChild(g); results.appendChild(sec);
+    });
+  } else { const g=document.createElement('div'); g.className='grid'; list.forEach(p=>g.appendChild(card(p,false))); results.appendChild(g); }
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function maskName(name,consent){ if(consent) return name; const p=String(name||'').trim().split(/\s+/); return p.length<2?(p[0]||''):p[0]+' '+p[p.length-1][0]+'.'; }
+const VR_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9.5A2.5 2.5 0 0 1 6.5 7h11A2.5 2.5 0 0 1 20 9.5v4a2.5 2.5 0 0 1-2.5 2.5h-2.6a1.6 1.6 0 0 1-1.3-.7l-.7-1a1.4 1.4 0 0 0-2.3 0l-.7 1a1.6 1.6 0 0 1-1.3.7H6.5A2.5 2.5 0 0 1 4 13.5z"/></svg>';
+const XR_HINT_BASE='Adds a VR badge and a headset symbol on the viewer. Leave off for large scenes that run poorly in a headset.';
+
+/* ==========================================================================
+   Viewer
+   ========================================================================== */
+const viewer=$('viewer'), vStage=$('v-stage'), vRail=$('v-rail'), vInfoBtn=$('v-info');
+let infoOpen=true;
+function applyInfo(){ viewer.classList.toggle('info-open',infoOpen); vInfoBtn.setAttribute('aria-pressed',infoOpen); }
+vInfoBtn.onclick=()=>{ infoOpen=!infoOpen; applyInfo(); };
+function openViewer(p,trigger){
+  lastFocused=trigger||document.activeElement;
+  $('v-title').textContent=p.title;
+  $('v-sub').textContent=[maskName(p.author,p.consent),p.type,p.year].filter(Boolean).join('  ·  ');
+  vStage.innerHTML='';
+  if(p.viewer){ const f=document.createElement('iframe'); f.src=resolveViewer(p.viewer); f.allow='fullscreen; xr-spatial-tracking'; f.title=`${p.title} — 3D viewer`; vStage.appendChild(f); }
+  else vStage.innerHTML=`<div class="v-empty"><h3>This plate isn't linked to a viewer yet</h3><p>Open the admin, edit this project, and add its <code>superspl.at</code> scene link.</p></div>`;
+  if(p.viewer && p.xr) vStage.insertAdjacentHTML('beforeend',`<div class="vr-flag" title="VR-ready — put on a WebXR headset and use the viewer's VR button">${VR_ICON}<span>VR ready</span></div>`);
+  const meta=[['Type',p.type],['Year',p.year],['Studio',p.studio]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('');
+  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl><p class="r-notes-h">Teaching notes</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
+  infoOpen=window.innerWidth>760; applyInfo();
+  viewer.classList.add('on'); document.body.style.overflow='hidden'; $('v-close').focus();
+}
+function closeViewer(){ viewer.classList.remove('on'); vStage.innerHTML=''; vRail.innerHTML=''; document.body.style.overflow=''; if(lastFocused) lastFocused.focus(); }
+$('v-close').onclick=closeViewer;
+viewer.addEventListener('keydown',e=>{ if(e.key==='Escape') closeViewer(); });
+
+/* ==========================================================================
+   Admin — form, list, import/export
+   ========================================================================== */
+function goAdmin(on){ document.body.classList.toggle('admin-mode',on); if(on){ renderAdmin(); window.scrollTo(0,0); } }
+$('manage-link').onclick=()=>{ location.hash='admin'; };
+$('exit-admin').onclick=()=>{ location.hash=''; };
+window.addEventListener('hashchange',()=>goAdmin(location.hash==='#admin'));
+
+function refreshTypeOptions(){ $('type-options').innerHTML=[...new Set([...COLLECTIONS,...DATA.map(p=>p.type).filter(Boolean)])].map(t=>`<option value="${esc(t)}">`).join(''); }
+
+/* thumbnail: resize on upload, keep files small */
+function processImage(file){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{ const max=900; let w=img.width,h=img.height; if(w>max){ h=Math.round(h*max/w); w=max; } const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); res(c.toDataURL('image/jpeg',.82)); URL.revokeObjectURL(img.src); };
+    img.onerror=()=>res(''); img.src=URL.createObjectURL(file);
+  });
+}
+function setThumb(src){ pendingThumb=src||''; const box=$('thumb-prev'); if(pendingThumb){ $('thumb-img').src=pendingThumb; box.classList.add('on'); } else box.classList.remove('on'); }
+const drop=$('drop'), thumbFile=$('f-thumb-file'), thumbUrl=$('f-thumb-url');
+drop.onclick=()=>thumbFile.click();
+thumbFile.onchange=async e=>{ if(e.target.files[0]){ setThumb(await processImage(e.target.files[0])); thumbUrl.value=''; } };
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop',async e=>{ const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')){ setThumb(await processImage(f)); thumbUrl.value=''; } });
+thumbUrl.addEventListener('input',()=>{ if(thumbUrl.value.trim()){ setThumb(thumbUrl.value.trim()); } else if(pendingThumb && !pendingThumb.startsWith('data:')) setThumb(''); });
+$('thumb-rm').onclick=()=>{ setThumb(''); thumbUrl.value=''; thumbFile.value=''; };
+
+/* live preview of the pasted scene link */
+const vwr=$('f-viewer'), pe=$('preview-embed'), pf=$('preview-frame');
+let peTimer=null;
+async function checkSize(v){
+  const xh=$('xr-hint'); if(!xh) return;
+  const s=(v||'').trim();
+  if(/^https?:/i.test(s) || !/(\.sog|\.ply)$/i.test(s)){ xh.textContent=XR_HINT_BASE; xh.style.color=''; return; }
+  const path=(MODELS_BASE + s.split('/').pop()).replace(/ /g,'%20');
+  try{
+    const r=await fetch(path,{method:'HEAD',cache:'no-store'});
+    const len=Number(r.headers.get('content-length'));
+    if(r.ok && len){
+      const mb=len/1048576, big=mb>20;
+      xh.textContent=`This scene is ${mb.toFixed(1)} MB — ${big?'large; it may stutter in a headset, so consider leaving VR off.':'a comfortable size for VR.'}`;
+      xh.style.color = big ? '#B23A48' : 'var(--teal)';
+    } else { xh.textContent=XR_HINT_BASE; xh.style.color=''; }
+  }catch(e){ xh.textContent=XR_HINT_BASE; xh.style.color=''; }
+}
+vwr.addEventListener('input',()=>{ clearTimeout(peTimer); peTimer=setTimeout(()=>{ const u=resolveViewer(vwr.value.trim()); if(u){ pf.src=u; pe.classList.add('on'); } else { pe.classList.remove('on'); pf.src='about:blank'; } checkSize(vwr.value); },500); });
+
+/* form submit */
+$('proj-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const p={
+    author:$('f-author').value.trim(), title:$('f-title').value.trim(),
+    type:$('f-type').value.trim(), year:$('f-year').value.trim(),
+    studio:$('f-studio').value.trim(), viewer:vwr.value.trim(),
+    poster:pendingThumb, caption:$('f-caption').value.trim(),
+    notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked
+  };
+  if(!p.author||!p.title){ return; }
+  if(p.featured) DATA.forEach(x=>x.featured=false);
+  if(editIndex===null) DATA.push(p); else DATA[editIndex]=p;
+  save(); resetForm(); rebuildFilters(); render(); renderAdmin();
+});
+$('cancel-btn').onclick=resetForm;
+
+function resetForm(){
+  editIndex=null; pendingThumb='';
+  $('proj-form').reset(); setThumb(''); pe.classList.remove('on'); pf.src='about:blank'; { const xh=$('xr-hint'); if(xh){ xh.textContent=XR_HINT_BASE; xh.style.color=''; } }
+  $('submit-btn').textContent='Add project'; $('cancel-btn').style.display='none';
+}
+function editProject(i){
+  const p=DATA[i]; editIndex=i;
+  $('f-author').value=p.author||''; $('f-title').value=p.title||'';
+  $('f-type').value=p.type||''; $('f-year').value=p.year||'';
+  $('f-studio').value=p.studio||''; vwr.value=p.viewer||'';
+  $('f-caption').value=p.caption||''; $('f-notes').value=p.notes||'';
+  $('f-featured').checked=!!p.featured; $('f-consent').checked=!!p.consent; $('f-xr').checked=!!p.xr; checkSize(p.viewer||'');
+  if(p.poster && !p.poster.startsWith('data:')){ thumbUrl.value=p.poster; } else thumbUrl.value='';
+  setThumb(p.poster||'');
+  { const rv=resolveViewer(p.viewer||''); if(rv){ pf.src=rv; pe.classList.add('on'); } }
+  $('submit-btn').textContent='Save changes'; $('cancel-btn').style.display='inline-block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function delProject(i){ if(confirm(`Delete "${DATA[i].title}" by ${DATA[i].author}? This can't be undone.`)){ DATA.splice(i,1); if(editIndex===i) resetForm(); save(); rebuildFilters(); render(); renderAdmin(); } }
+function move(i,d){ const j=i+d; if(j<0||j>=DATA.length) return; [DATA[i],DATA[j]]=[DATA[j],DATA[i]]; save(); render(); renderAdmin(); }
+
+function renderAdmin(){
+  refreshTypeOptions();
+  $('admin-count').textContent=`${DATA.length} model${DATA.length===1?'':'s'}`;
+  const list=$('admin-list');
+  if(!DATA.length){ list.innerHTML=`<p class="list-empty">No models yet. Add your first one with the form.</p>`; return; }
+  list.innerHTML='';
+  DATA.forEach((p,i)=>{
+    const row=document.createElement('div'); row.className='row';
+    const thumb = p.poster ? `<img class="rthumb" src="${esc(p.poster)}" alt="">` : `<div class="rthumb" style="background:${placeholder(p.type)}"></div>`;
+    row.innerHTML=`${thumb}
+      <div class="rmeta">
+        <div class="rname">${esc(p.title)} ${p.featured?'<span class="rstar">★ lead</span>':''}</div>
+        <div class="rsub">${[esc(p.author),p.type?esc(p.type):'',p.year?esc(p.year):''].filter(Boolean).join(' · ')}${p.viewer?'':' · <span style="color:#B23A48">no link</span>'}${p.consent?'':' · <span style="color:var(--slate)">name hidden</span>'}</div>
+      </div>
+      <div class="racts">
+        <button class="iconbtn" title="Move up" ${i===0?'disabled':''} data-a="up">↑</button>
+        <button class="iconbtn" title="Move down" ${i===DATA.length-1?'disabled':''} data-a="down">↓</button>
+        <button class="iconbtn" title="Edit" data-a="edit">✎</button>
+        <button class="iconbtn" title="Delete" data-a="del">🗑</button>
+      </div>`;
+    row.querySelector('[data-a=up]').onclick=()=>move(i,-1);
+    row.querySelector('[data-a=down]').onclick=()=>move(i,1);
+    row.querySelector('[data-a=edit]').onclick=()=>editProject(i);
+    row.querySelector('[data-a=del]').onclick=()=>delProject(i);
+    list.appendChild(row);
+  });
+}
+
+/* export / import / reload */
+$('export-btn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='projects.json'; a.click(); URL.revokeObjectURL(a.href);
+};
+$('import-btn').onclick=()=>$('import-file').click();
+$('import-file').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d)){ DATA=d; save(); rebuildFilters(); render(); renderAdmin(); } else alert('That file isn\'t a projects list.'); }catch(err){ alert('Couldn\'t read that file as JSON.'); } }; r.readAsText(f); };
+$('pull-btn').onclick=async()=>{
+  if(!confirm('Reload from the published projects.json and discard local changes in this browser?')) return;
+  try{ const r=await fetch('projects.json',{cache:'no-store'}); if(r.ok){ const d=await r.json(); if(Array.isArray(d)){ DATA=d; save(); rebuildFilters(); render(); renderAdmin(); resetForm(); return; } } alert('No published projects.json found beside this page yet.'); }catch(e){ alert('Couldn\'t reach projects.json (are you viewing this on a web server?).'); }
+};
+
+/* ==========================================================================
+   Boot
+   ========================================================================== */
+/* GitHub publish */
+function ghLoad(){
+  $('gh-owner').value = read('archive-gh-owner') || GITHUB.owner || '';
+  $('gh-repo').value  = read('archive-gh-repo')  || GITHUB.repo  || '';
+  $('gh-branch').value= read('archive-gh-branch')|| GITHUB.branch|| 'main';
+  $('gh-path').value  = read('archive-gh-path-'+ARCHIVE_ID)  || GITHUB.path  || '';
+  $('gh-token').value = read('archive-gh-token') || '';
+}
+function ghGet(){ return { owner:$('gh-owner').value.trim(), repo:$('gh-repo').value.trim(), branch:$('gh-branch').value.trim()||'main', path:$('gh-path').value.trim(), token:$('gh-token').value.trim() }; }
+function pub(msg,cls){ const s=$('pub-status'); s.textContent=msg; s.className='pub-status '+(cls||''); }
+function b64(str){ return btoa(unescape(encodeURIComponent(str))); }
+$('gh-setup-btn').onclick=()=>{ ghLoad(); $('gh-panel').classList.toggle('on'); };
+$('gh-close').onclick=()=>$('gh-panel').classList.remove('on');
+$('gh-save').onclick=()=>{ const g=ghGet(); store('archive-gh-owner',g.owner); store('archive-gh-repo',g.repo); store('archive-gh-branch',g.branch); store('archive-gh-path-'+ARCHIVE_ID,g.path); store('archive-gh-token',g.token); $('gh-panel').classList.remove('on'); pub('Settings saved.','ok'); };
+$('publish-btn').onclick=async()=>{
+  ghLoad(); const g=ghGet();
+  if(!g.owner||!g.repo||!g.token||!g.path){ $('gh-panel').classList.add('on'); pub('Add your repo details and access token, then Save.','busy'); return; }
+  pub('Publishing…','busy');
+  const api=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${g.path.split('/').map(encodeURIComponent).join('/')}`;
+  const headers={Authorization:`Bearer ${g.token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  try{
+    let sha; const gr=await fetch(`${api}?ref=${encodeURIComponent(g.branch)}`,{headers}); if(gr.ok){ sha=(await gr.json()).sha; }
+    const body={ message:`Update ${g.path} via archive admin`, content:b64(JSON.stringify(DATA,null,2)), branch:g.branch };
+    if(sha) body.sha=sha;
+    const pr=await fetch(api,{method:'PUT',headers,body:JSON.stringify(body)});
+    if(pr.ok){ pub('Published \u2713  The live site updates within a minute or two.','ok'); }
+    else{ const e=await pr.json().catch(()=>({})); pub(`Publish failed (${pr.status}): ${e.message||'check the repo, path and token'}`,'err'); }
+  }catch(err){ pub('Publish failed — network/CORS or a bad token. Check the details and try again.','err'); }
+};
+
+(async function boot(){
+  let data=null;
+  try{ const r=await fetch('projects.json',{cache:'no-store'}); if(r.ok) data=await r.json(); }catch(e){}
+  const local=read(STORE);
+  if(local){ try{ const d=JSON.parse(local); if(Array.isArray(d)) data=d; }catch(e){} }
+  DATA = (Array.isArray(data)&&data.length)?data:SAMPLE.slice();
+  rebuildFilters(); render();
+  goAdmin(location.hash==='#admin');
+})();
+</script>
+</body>
+</html>

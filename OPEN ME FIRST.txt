@@ -1,0 +1,30 @@
+HOW TO RUN THE DIGITAL ARCHIVE
+==============================
+
+The 3D viewer only works when the site is SERVED (an http:// address).
+It will NOT work if you double-click index.html directly (a file:// address) —
+that is a browser security rule, not a fault in the site.
+
+EASIEST WAY
+-----------
+Mac:      double-click  "Start Archive (Mac).command"
+Windows:  double-click  "Start Archive (Windows).bat"
+
+A small window opens and your browser goes to http://localhost:8000/.
+Keep that window open while you use the archive; close it to stop.
+
+  (Mac note: if double-click is blocked the first time, right-click the file
+   and choose Open, then Open again. Or in Terminal run:
+   chmod +x "Start Archive (Mac).command" )
+
+CHECK YOU'RE SERVED, NOT ON A FILE
+----------------------------------
+The browser address bar must start with   http://localhost:8000
+If it starts with   file://   the viewer will be blank — that's the problem.
+
+QUICK VIEWER TEST
+-----------------
+With the server running, paste this into the browser:
+  http://localhost:8000/viewer/index.html?content=../models/architecture/Zumpter.sog&webgl
+If the model appears, the viewer and files are perfect and it's only ever a
+serving issue.

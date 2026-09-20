@@ -1,0 +1,1 @@
+Optional thumbnails (or drop screenshots straight into the admin form).

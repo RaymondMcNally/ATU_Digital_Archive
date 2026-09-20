@@ -1,0 +1,2 @@
+Put this catalogue's .sog scans here, e.g. creative-design/vessel.sog
+In the catalogue admin you then enter just the filename (vessel.sog).
