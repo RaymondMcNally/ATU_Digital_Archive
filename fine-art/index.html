@@ -14,11 +14,13 @@
        - The admin (footer link "Manage archive", or add #admin to the URL) lets
          you add / edit / delete / reorder projects through a form. Changes save
          in THIS browser as you work.
-       - To publish for everyone: in the admin, hit "Export projects.json" and
-         upload the downloaded file beside this page (replacing the old one).
-       - Thumbnails: screenshot your framed model and drop it in the form. To keep
-         the data file light for a large archive, host images in a /posters/
-         folder and paste the path instead of embedding the screenshot.
+       - To publish for everyone: in the admin, hit "Export for upload". It
+         downloads <catalogue>-update.zip holding <catalogue>/projects.json and
+         any new thumbnails as posters/<catalogue>/*.jpg. Unzip it and drag
+         everything inside into the repo's Upload files page (site root).
+       - Thumbnails: screenshot your framed model and drop it in the form. On
+         export/publish it becomes an image file and projects.json just stores
+         its path, so the data file stays small however large the archive gets.
 
      COLLECTIONS (model types + their order) are set in the config block below.
      ========================================================================== -->
@@ -279,7 +281,7 @@
     <div class="admin-bar-actions">
       <button class="abtn accent" id="publish-btn">Publish live</button>
       <button class="abtn ghost" id="gh-setup-btn">Publish setup</button>
-      <button class="abtn ghost" id="export-btn">Export projects.json</button>
+      <button class="abtn ghost" id="export-btn">Export for upload</button>
       <button class="abtn ghost" id="import-btn">Import…</button>
       <input id="import-file" type="file" accept="application/json" hidden>
       <button class="abtn ghost" id="pull-btn">Reload published</button>
@@ -287,7 +289,7 @@
     </div>
   </div>
   <div class="admin-wrap sheet">
-    <p class="admin-note">Changes save in <b>this browser</b> as you work. To update the live site for everyone, either <b>Publish live</b> (commits to your repo) or <b>Export projects.json</b> and upload it beside this page.</p>
+    <p class="admin-note">Changes save in <b>this browser</b> as you work. To update the live site for everyone, either <b>Publish live</b> (commits to your repo) or <b>Export for upload</b>, which downloads a zip holding <code>projects.json</code> and any new thumbnails. Unzip it and drag everything inside into your repo’s Upload files page.</p>
     <div id="gh-panel" class="gh-panel">
       <div class="gh-grid">
         <div><label>GitHub owner</label><input type="text" id="gh-owner" placeholder="e.g. rmcnally"></div>
@@ -327,7 +329,7 @@
           <label>Thumbnail</label>
           <div class="drop" id="drop">Drop a screenshot here, or click to choose an image</div>
           <input type="file" id="f-thumb-file" accept="image/*" hidden>
-          <input type="text" id="f-thumb-url" placeholder="…or paste an image path, e.g. posters/name.jpg" style="margin-top:10px">
+          <input type="text" id="f-thumb-url" placeholder="…or type an image filename already in the posters folder, e.g. name.jpg" style="margin-top:10px">
           <p class="hint">Leave empty and a placeholder plate (colour-coded by type) is drawn automatically.</p>
           <div class="thumb-prev" id="thumb-prev"><img id="thumb-img" alt=""><button type="button" class="rm" id="thumb-rm" aria-label="Remove thumbnail">&times;</button></div>
         </div>
@@ -538,7 +540,7 @@ function card(p,featured){
   const btn=document.createElement('button');
   btn.className='plate'+(featured?' featured':''); btn.type='button';
   const poster=document.createElement('div'); poster.className='poster';
-  if(p.poster){ const img=document.createElement('img'); img.src=p.poster; img.alt=`${p.title} by ${maskName(p.author,p.consent)}`; img.loading='lazy'; poster.appendChild(img); }
+  if(p.poster){ const img=document.createElement('img'); img.src=posterSrc(p.poster); img.alt=`${p.title} by ${maskName(p.author,p.consent)}`; img.loading='lazy'; poster.appendChild(img); }
   else { poster.style.background=placeholder(p.type); poster.innerHTML=`<div class="ph"><div class="ph-title">${esc(p.title)}</div></div>`; }
   poster.insertAdjacentHTML('beforeend',`<span class="badge"><span class="dot"></span>${p.type?esc(p.type)+' model':'3D model'}</span>`);
   if(p.xr) poster.insertAdjacentHTML('beforeend',`<span class="badge badge-vr">${VR_ICON}VR</span>`);
@@ -620,7 +622,7 @@ function processImage(file){
     img.onerror=()=>res(''); img.src=URL.createObjectURL(file);
   });
 }
-function setThumb(src){ pendingThumb=src||''; const box=$('thumb-prev'); if(pendingThumb){ $('thumb-img').src=pendingThumb; box.classList.add('on'); } else box.classList.remove('on'); }
+function setThumb(src){ pendingThumb=src||''; const box=$('thumb-prev'); if(pendingThumb){ $('thumb-img').src=posterSrc(normPoster(pendingThumb)); box.classList.add('on'); } else box.classList.remove('on'); }
 const drop=$('drop'), thumbFile=$('f-thumb-file'), thumbUrl=$('f-thumb-url');
 drop.onclick=()=>thumbFile.click();
 thumbFile.onchange=async e=>{ if(e.target.files[0]){ setThumb(await processImage(e.target.files[0])); thumbUrl.value=''; } };
@@ -678,7 +680,7 @@ $('proj-form').addEventListener('submit',e=>{
     author:$('f-author').value.trim(), title:$('f-title').value.trim(),
     type:$('f-type').value.trim(), year:$('f-year').value.trim(),
     studio:$('f-studio').value.trim(), viewer:vwr.value.trim(),
-    poster:pendingThumb, caption:$('f-caption').value.trim(),
+    poster:normPoster(pendingThumb), caption:$('f-caption').value.trim(),
     notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked,
     intro:$('f-intro').checked, introUp:$('f-intro-up').value, introTurn:Number($('f-intro-turn').value)
   };
@@ -719,7 +721,7 @@ function renderAdmin(){
   list.innerHTML='';
   DATA.forEach((p,i)=>{
     const row=document.createElement('div'); row.className='row';
-    const thumb = p.poster ? `<img class="rthumb" src="${esc(p.poster)}" alt="">` : `<div class="rthumb" style="background:${placeholder(p.type)}"></div>`;
+    const thumb = p.poster ? `<img class="rthumb" src="${esc(posterSrc(p.poster))}" alt="">` : `<div class="rthumb" style="background:${placeholder(p.type)}"></div>`;
     row.innerHTML=`${thumb}
       <div class="rmeta">
         <div class="rname">${esc(p.title)} ${p.featured?'<span class="rstar">★ lead</span>':''}${p.intro?'<span class="rintro">in intro</span>':''}</div>
@@ -739,10 +741,70 @@ function renderAdmin(){
   });
 }
 
+/* ==========================================================================
+   Thumbnails as image files. A dropped screenshot is kept in the browser until
+   you export or publish; then it's written out as posters/<catalogue>/<name>.jpg
+   and projects.json just points at it, which keeps projects.json small.
+   ========================================================================== */
+const CAT = MODELS_BASE.replace(/\/+$/,'').split('/').pop();          // e.g. "architecture"
+const POSTERS_BASE = '../posters/' + CAT + '/';                        // as seen from this page
+const SHOWN = {};                                                      // exported this session: path -> image, so it still shows before upload
+const posterSrc = v => SHOWN[v] || v || '';
+function normPoster(v){ const s=(v||'').trim(); if(!s || /^data:|[\/:]/.test(s)) return s; return POSTERS_BASE + s; }   // bare filename -> posters folder
+function slug(s){ return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'model'; }
+function dataBytes(u){ const i=u.indexOf(','), head=u.slice(0,i), bin=atob(u.slice(i+1)), a=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++) a[k]=bin.charCodeAt(k); return { bytes:a, b64:u.slice(i+1), ext:/png/.test(head)?'png':/webp/.test(head)?'webp':'jpg' }; }
+function extractPosters(list){
+  const used=new Set(), files=[];
+  list.forEach(p=>{ if(p.poster && !p.poster.startsWith('data:')) used.add(p.poster.split('/').pop()); });
+  const json=list.map(p=>{
+    const q={...p};
+    if(q.poster && q.poster.startsWith('data:')){
+      const d=dataBytes(q.poster), base=slug(`${q.title}-${q.author}`);
+      let name=`${base}.${d.ext}`, n=2; while(used.has(name)) name=`${base}-${n++}.${d.ext}`;
+      used.add(name);
+      files.push({ repo:`posters/${CAT}/${name}`, rel:POSTERS_BASE+name, bytes:d.bytes, b64:d.b64, data:q.poster });
+      q.poster=POSTERS_BASE+name;
+    }
+    return q;
+  });
+  return { json, files };
+}
+function applyExtracted(files){
+  files.forEach(f=>{ SHOWN[f.rel]=f.data; DATA.forEach(p=>{ if(p.poster===f.data) p.poster=f.rel; }); if(pendingThumb===f.data) pendingThumb=f.rel; });
+  save(); render(); renderAdmin();
+}
+
+/* tiny zip writer (no compression; the images are already compressed) */
+const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(a){ let c=~0; for(let i=0;i<a.length;i++) c=CRC_T[(c^a[i])&255]^(c>>>8); return (~c)>>>0; }
+function makeZip(entries){
+  const enc=new TextEncoder(), parts=[], central=[], d=new Date();
+  const dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(), tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  let off=0;
+  for(const e of entries){
+    const nm=enc.encode(e.name), crc=crc32(e.bytes), sz=e.bytes.length;
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint16(10,tm,true); h.setUint16(12,dt,true);
+    h.setUint32(14,crc,true); h.setUint32(18,sz,true); h.setUint32(22,sz,true); h.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(h.buffer), nm, e.bytes);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint16(12,tm,true); c.setUint16(14,dt,true);
+    c.setUint32(16,crc,true); c.setUint32(20,sz,true); c.setUint32(24,sz,true); c.setUint16(28,nm.length,true); c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer), nm);
+    off+=30+nm.length+sz;
+  }
+  const cd=central.reduce((s,a)=>s+a.length,0), end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true); end.setUint16(8,entries.length,true); end.setUint16(10,entries.length,true); end.setUint32(12,cd,true); end.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(end.buffer)],{type:'application/zip'});
+}
+
 /* export / import / reload */
 $('export-btn').onclick=()=>{
-  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='projects.json'; a.click(); URL.revokeObjectURL(a.href);
+  const { json, files }=extractPosters(DATA);
+  const entries=[{ name:`${CAT}/projects.json`, bytes:new TextEncoder().encode(JSON.stringify(json,null,2)) }, ...files.map(f=>({ name:f.repo, bytes:f.bytes }))];
+  const a=document.createElement('a'); a.href=URL.createObjectURL(makeZip(entries)); a.download=`${CAT}-update.zip`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  if(files.length) applyExtracted(files);
+  pub(`Exported ${CAT}-update.zip${files.length?` with ${files.length} new thumbnail${files.length===1?'':'s'}`:''}. Unzip it and drag everything inside into your repo's Upload files page.`,'ok');
 };
 $('import-btn').onclick=()=>$('import-file').click();
 $('import-file').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d)){ DATA=d; save(); rebuildFilters(); render(); renderAdmin(); } else alert('That file isn\'t a projects list.'); }catch(err){ alert('Couldn\'t read that file as JSON.'); } }; r.readAsText(f); };
@@ -776,7 +838,19 @@ $('publish-btn').onclick=async()=>{
   const headers={Authorization:`Bearer ${g.token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
   try{
     let sha; const gr=await fetch(`${api}?ref=${encodeURIComponent(g.branch)}`,{headers}); if(gr.ok){ sha=(await gr.json()).sha; }
-    const body={ message:`Update ${g.path} via archive admin`, content:b64(JSON.stringify(DATA,null,2)), branch:g.branch };
+    // thumbnails first, as image files beside the catalogue's posters folder
+    const { json, files }=extractPosters(DATA), prefix=g.path.split('/').slice(0,-2).map(x=>x+'/').join('');   // repo folder holding the site, usually none
+    for(const f of files){
+      pub(`Publishing thumbnail ${files.indexOf(f)+1} of ${files.length}…`,'busy');
+      const fapi=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${(prefix+f.repo).split('/').map(encodeURIComponent).join('/')}`;
+      let fsha; const fr=await fetch(`${fapi}?ref=${encodeURIComponent(g.branch)}`,{headers}); if(fr.ok){ fsha=(await fr.json()).sha; }
+      const fb={ message:`Add thumbnail ${f.repo} via archive admin`, content:f.b64, branch:g.branch }; if(fsha) fb.sha=fsha;
+      const fp=await fetch(fapi,{method:'PUT',headers,body:JSON.stringify(fb)});
+      if(!fp.ok){ const e=await fp.json().catch(()=>({})); pub(`Thumbnail upload failed (${fp.status}): ${e.message||'check the token has write access'}`,'err'); return; }
+    }
+    if(files.length) applyExtracted(files);
+    pub('Publishing…','busy');
+    const body={ message:`Update ${g.path} via archive admin`, content:b64(JSON.stringify(json,null,2)), branch:g.branch };
     if(sha) body.sha=sha;
     const pr=await fetch(api,{method:'PUT',headers,body:JSON.stringify(body)});
     if(pr.ok){ pub('Published \u2713  The live site updates within a minute or two.','ok'); }
