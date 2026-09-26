@@ -333,16 +333,16 @@ themeBtn.addEventListener('click',()=>{ if(reduce) draw(1,0); });
      Enter dives through the cloud into the hub.
      ========================================================================== -->
 <script type="module">
-/* EDIT HERE — the featured scan the logo turns into.
-   axes maps the scan's axes to screen right, up, toward-viewer ("z,-y,x" means
-   right = scan z, up = minus scan y, toward you = scan x). Change it if a model
-   comes in sideways or upside down. */
-const FEATURE = {
+/* The scan the logo turns into is picked at random from every model ticked
+   "Show in the home page intro" in the catalogue admin pages. These catalogues'
+   projects.json files are read; FALLBACK is used if nothing is ticked yet.
+   up / turn: which way is up in the scan file, and how far to spin it (degrees)
+   so its best side faces the viewer. Set per model in the admin form. */
+const INTRO_CATALOGUES = ['architecture', 'interior-architecture', 'creative-design', 'fine-art'];
+const FALLBACK = {
   src:   'models/architecture/Sligo Train Station Model.sog',
-  title: 'Sligo Transportation Hub',
-  by:    'Li Ling',
-  note:  'Studio 5, 2025/26',
-  axes:  'z,-y,x'
+  title: 'Sligo Transportation Hub', by: 'Li Ling', note: 'Studio 5, 2025/26',
+  up: '-y', turn: 270
 };
 const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const root = document.documentElement;
@@ -385,8 +385,6 @@ async function startIntro(){
   el.querySelector('.intro-inst strong').textContent = H.institution;
   el.querySelector('.intro-inst span').textContent = H.sub;
   el.querySelector('.intro-title').textContent = H.title;
-  el.querySelector('.intro-f-title').textContent = FEATURE.title;
-  el.querySelector('.intro-f-by').textContent = [FEATURE.by, FEATURE.note].filter(Boolean).join(', ');
   document.body.appendChild(el);
 
   const canvas = el.querySelector('#intro-gl');
@@ -496,16 +494,24 @@ async function startIntro(){
   resize(); addEventListener('resize', resize);
 
   /* ---------- load the featured scan in the background ---------- */
-  let scanReady = false, scanCount = 0, morphStart = null;
-  loadScan().then(ok => { scanReady = ok; }).catch(() => {});
+  let scanReady = false, scanCount = 0, morphStart = null, scanElev = 0.26;
+  (async () => {
+    // try candidates in random order until one loads (a missing file just skips to the next)
+    const list = await introCandidates();
+    for (const f of list.slice(0, 4)){
+      try { if (await loadScan(f)){ scanReady = true; try { localStorage.setItem('archive-intro-last', f.src); } catch(e){} return; } } catch(e){}
+    }
+  })();
 
-  async function loadScan(){
+  async function loadScan(FEATURE){
     let buf;
-    if (window.__FEATURE_SOG_B64){ const b = atob(window.__FEATURE_SOG_B64); buf = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) buf[i] = b.charCodeAt(i); }
-    else { const r = await fetch(encodeURI(FEATURE.src)); if (!r.ok) return false; buf = new Uint8Array(await r.arrayBuffer()); }
+    if (window.__FEATURE_SOG_B64 && !FEATURE.src.startsWith('http')){ const b = atob(window.__FEATURE_SOG_B64[FEATURE.src] || ''); if (!b) return false; buf = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) buf[i] = b.charCodeAt(i); }
+    else { const r = await fetch(FEATURE.src.startsWith('http') ? FEATURE.src : encodeURI(FEATURE.src)); if (!r.ok) return false; buf = new Uint8Array(await r.arrayBuffer()); }
     const s = await readSOG(buf, renderer);
     if (!s) return false;
     scanCount = s.count;
+    el.querySelector('.intro-f-title').textContent = FEATURE.title || '';
+    el.querySelector('.intro-f-by').textContent = [FEATURE.by, FEATURE.note].filter(Boolean).join(', ');
 
     // keep splats that actually show; subsample or repeat to fill N
     const keep = [];
@@ -513,12 +519,16 @@ async function startIntro(){
     for (let i = keep.length - 1; i > 0; i--){ const j = Math.random() * (i + 1) | 0; [keep[i], keep[j]] = [keep[j], keep[i]]; }
 
     // axes remap, then fit into the frame the logo occupies (robust bounds ignore floaters)
-    const ax = FEATURE.axes.split(',').map(a => ({ k:'xyz'.indexOf(a.trim().slice(-1)), s:a.trim()[0] === '-' ? -1 : 1 }));
+    const R = orient(FEATURE.up, FEATURE.turn);
     const P = new Float32Array(keep.length * 3);
-    keep.forEach((k, j) => { for (let a = 0; a < 3; a++) P[j*3+a] = s.pos[k*3 + ax[a].k] * ax[a].s; });
+    keep.forEach((k, j) => { const x = s.pos[k*3], y = s.pos[k*3+1], z = s.pos[k*3+2];
+      for (let a = 0; a < 3; a++) P[j*3+a] = R[a*3] * x + R[a*3+1] * y + R[a*3+2] * z; });
     const q = (a, f) => { const v = []; for (let j = 0; j < keep.length; j += 7) v.push(P[j*3+a]); v.sort((x, y) => x - y); return v[Math.floor(f * (v.length - 1))]; };
     const lo = [0,1,2].map(a => q(a, 0.005)), hi = [0,1,2].map(a => q(a, 0.995));
-    const k = (camera.aspect < 1.1 ? 1.45 : 1.8) / Math.max(hi[0] - lo[0], hi[1] - lo[1]);
+    const w = hi[0] - lo[0], h = hi[1] - lo[1], d = hi[2] - lo[2];
+    const flat = h / Math.max(w, d);                        // flat site models get a higher, looking-down camera
+    scanElev = flat < 0.3 ? 0.62 : flat < 0.6 ? 0.4 : 0.26;
+    const k = (camera.aspect < 1.1 ? 1.45 : 1.8) / Math.max(w, h * Math.cos(scanElev) + d * Math.sin(scanElev), d * 0.8);   // on-screen footprint at that camera angle
     const c = [0,1,2].map(a => (lo[a] + hi[a]) / 2);
 
     for (let i = 0; i < N; i++){
@@ -579,7 +589,7 @@ async function startIntro(){
     const t = (now - t0) / 1000; frameNo++;
     uniforms.uTime.value = t;
 
-    if (morphStart === null && scanReady && t > MORPH_AT) morphStart = t;
+    if (morphStart === null && scanReady && t > MORPH_AT && t < 16) morphStart = t;   // too slow to load: stay on the logo
     const st = morphStart === null ? -1 : t - morphStart;
     uniforms.uScanT.value = st;
     const m = sm01(st / 2.7);                                   // overall morph progress
@@ -599,7 +609,7 @@ async function startIntro(){
     uniforms.uExit.value = ex;
     // camera: gentle sway for the logo, a wider slow orbit looking down on the model
     const az = Math.sin(t * 0.17) * (0.26 + m * 0.34) + sm.x * 0.14;
-    const el2 = 0.06 + m * 0.2 + Math.sin(t * 0.11) * 0.04 + sm.y * 0.08;
+    const el2 = 0.06 + m * (scanElev - 0.06) + Math.sin(t * 0.11) * 0.04 + sm.y * 0.08;
     const r = dist * (1 - ex * ex * 0.55);
     camera.position.set(Math.sin(az) * Math.cos(el2) * r, Math.sin(el2) * r, Math.cos(az) * Math.cos(el2) * r);
     camera.lookAt(0, 0, 0);
@@ -649,6 +659,39 @@ async function startIntro(){
     }
     return out;
   }
+}
+
+/* ---------- which scan to show: ticked models from every catalogue, shuffled ---------- */
+async function introCandidates(){
+  const qp = new URLSearchParams(location.search).get('preview');       // admin "Preview in the intro"
+  if (qp){ try { return [JSON.parse(decodeURIComponent(escape(atob(qp.replace(/-/g,'+').replace(/_/g,'/')))))]; } catch(e){} }
+  const mask = (n, ok) => { if (ok) return n || ''; const p = String(n || '').trim().split(/\s+/); return p.length < 2 ? (p[0] || '') : p[0] + ' ' + p[p.length-1][0] + '.'; };
+  const lists = await Promise.all(INTRO_CATALOGUES.map(c =>
+    fetch(c + '/projects.json', { cache:'no-cache' }).then(r => r.ok ? r.json() : []).catch(() => []).then(d => (Array.isArray(d) ? d : []).map(p => [c, p]))));
+  const out = [];
+  lists.flat().forEach(([c, p]) => {
+    if (!p || !p.intro) return;
+    const v = String(p.viewer || '').trim();
+    const src = /^https?:\/\/.+\.sog(\?.*)?$/i.test(v) ? v : /\.sog$/i.test(v) ? 'models/' + c + '/' + v.split('/').pop() : '';
+    if (!src) return;
+    out.push({ src, title:p.title, by:mask(p.author, p.consent),
+      note:[String(p.studio || '').split(/\s+[—–-]\s+/)[0].trim(), p.year].filter(Boolean).join(', '),
+      up:p.introUp || '-y', turn:Number(p.introTurn) || 0 });
+  });
+  if (!out.length) return [FALLBACK];
+  for (let i = out.length - 1; i > 0; i--){ const j = Math.random() * (i + 1) | 0; [out[i], out[j]] = [out[j], out[i]]; }
+  let last = null; try { last = localStorage.getItem('archive-intro-last'); } catch(e){}
+  if (out.length > 1 && out[0].src === last) out.push(out.shift());   // never the same one twice running
+  return out;
+}
+
+/* rotation (row-major 3x3): stand the scan's up axis upright, then spin it about vertical */
+function orient(up, turn){
+  const U = { '-y':[1,0,0, 0,-1,0, 0,0,-1], '+y':[1,0,0, 0,1,0, 0,0,1], '+z':[1,0,0, 0,0,1, 0,-1,0], '-z':[1,0,0, 0,0,-1, 0,1,0] }[up] || [1,0,0, 0,-1,0, 0,0,-1];
+  const a = (Number(turn) || 0) * Math.PI / 180, c = Math.round(Math.cos(a) * 1e6) / 1e6, s = Math.round(Math.sin(a) * 1e6) / 1e6;
+  const T = [c,0,s, 0,1,0, -s,0,c], M = [];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) M[i*3+j] = T[i*3] * U[j] + T[i*3+1] * U[3+j] + T[i*3+2] * U[6+j];
+  return M;
 }
 
 /* ---------- SOG (v2) reader: zip → webp textures → splat positions, colours, sizes ----------

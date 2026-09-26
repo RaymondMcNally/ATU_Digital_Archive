@@ -186,6 +186,9 @@
   .form input:focus,.form textarea:focus,.form select:focus{outline:none;border-color:var(--teal)}
   .form textarea{resize:vertical;min-height:84px;line-height:1.5}
   .req{color:#B23A48}
+  .intro-opts{display:none;margin-top:4px;padding:2px 0 0 25px}
+  .intro-opts.on{display:block}
+  .rintro{font-size:11.5px;color:var(--teal);margin-left:6px;white-space:nowrap}
   .hint{font-size:12.5px;color:var(--slate);margin:6px 0 0;line-height:1.5}
   .check{display:flex;align-items:center;gap:9px;font-size:14.5px;color:var(--ink);cursor:pointer}
   .check input{width:16px;height:16px;accent-color:var(--teal)}
@@ -334,6 +337,18 @@
         <div class="field"><label class="check"><input type="checkbox" id="f-consent"> Show the student's full name publicly</label><p class="hint">Off = public pages show first name + initial only. The full name is always kept here for your records.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-xr"> Suitable for VR / XR viewing</label><p class="hint" id="xr-hint">Adds a VR badge and a headset symbol on the viewer. Leave off for large scenes that run poorly in a headset.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-featured"> Feature as the lead plate</label></div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="f-intro"> Show in the home page intro</label>
+          <p class="hint">Each time someone opens the archive, one ticked model is picked at random and the ATU logo turns into it. Needs a .sog file in this catalogue's models folder.</p>
+          <div class="intro-opts" id="intro-opts">
+            <div class="field row2" style="margin:12px 0 10px">
+              <div><label for="f-intro-up">Up direction in the scan</label><select id="f-intro-up"><option value="-y">&minus;Y (most scans)</option><option value="+y">+Y</option><option value="+z">+Z (drone, lidar)</option><option value="-z">&minus;Z</option></select></div>
+              <div><label for="f-intro-turn">Turn to face the viewer</label><select id="f-intro-turn"><option value="0">0&deg;</option><option value="90">90&deg;</option><option value="180">180&deg;</option><option value="270">270&deg;</option></select></div>
+            </div>
+            <button type="button" class="abtn ghost" id="intro-preview">Preview in the intro</button>
+            <p class="hint" id="intro-hint">Opens the home page intro with this model. If it arrives upside down or facing away, change the settings above and preview again.</p>
+          </div>
+        </div>
 
         <div class="form-actions">
           <button type="submit" class="abtn accent" id="submit-btn">Add project</button>
@@ -634,6 +649,27 @@ async function checkSize(v){
 }
 vwr.addEventListener('input',()=>{ clearTimeout(peTimer); peTimer=setTimeout(()=>{ const u=resolveViewer(vwr.value.trim()); if(u){ pf.src=u; pe.classList.add('on'); } else { pe.classList.remove('on'); pf.src='about:blank'; } checkSize(vwr.value); },500); });
 
+/* home page intro: this catalogue's models folder as seen from the site root */
+const ROOT_MODELS = MODELS_BASE.replace(/^(\.\.\/)+/, '');
+function introSrc(v){
+  const s=(v||'').trim();
+  if(/^https?:\/\/.+\.sog(\?.*)?$/i.test(s)) return s;
+  if(/\.sog$/i.test(s)) return ROOT_MODELS + s.split('/').pop();
+  return '';
+}
+function syncIntroOpts(){ $('intro-opts').classList.toggle('on', $('f-intro').checked); }
+$('f-intro').addEventListener('change', syncIntroOpts);
+$('intro-preview').onclick=()=>{
+  const src=introSrc(vwr.value);
+  if(!src){ $('intro-hint').textContent='The intro needs a .sog file. Type the .sog filename in the Model field first.'; $('intro-hint').style.color='#B23A48'; return; }
+  $('intro-hint').style.color=''; 
+  const f={ src, title:$('f-title').value.trim()||'Untitled', by:maskName($('f-author').value.trim(), $('f-consent').checked),
+    note:[($('f-studio').value.split(/\s+[—–-]\s+/)[0]||'').trim(), $('f-year').value.trim()].filter(Boolean).join(', '),
+    up:$('f-intro-up').value, turn:Number($('f-intro-turn').value) };
+  const b64u=btoa(unescape(encodeURIComponent(JSON.stringify(f)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  window.open('../index.html?intro&preview='+b64u, '_blank');
+};
+
 /* form submit */
 $('proj-form').addEventListener('submit',e=>{
   e.preventDefault();
@@ -642,7 +678,8 @@ $('proj-form').addEventListener('submit',e=>{
     type:$('f-type').value.trim(), year:$('f-year').value.trim(),
     studio:$('f-studio').value.trim(), viewer:vwr.value.trim(),
     poster:pendingThumb, caption:$('f-caption').value.trim(),
-    notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked
+    notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked,
+    intro:$('f-intro').checked, introUp:$('f-intro-up').value, introTurn:Number($('f-intro-turn').value)
   };
   if(!p.author||!p.title){ return; }
   if(p.featured) DATA.forEach(x=>x.featured=false);
@@ -653,7 +690,7 @@ $('cancel-btn').onclick=resetForm;
 
 function resetForm(){
   editIndex=null; pendingThumb='';
-  $('proj-form').reset(); setThumb(''); pe.classList.remove('on'); pf.src='about:blank'; { const xh=$('xr-hint'); if(xh){ xh.textContent=XR_HINT_BASE; xh.style.color=''; } }
+  $('proj-form').reset(); syncIntroOpts(); $('intro-hint').style.color=''; setThumb(''); pe.classList.remove('on'); pf.src='about:blank'; { const xh=$('xr-hint'); if(xh){ xh.textContent=XR_HINT_BASE; xh.style.color=''; } }
   $('submit-btn').textContent='Add project'; $('cancel-btn').style.display='none';
 }
 function editProject(i){
@@ -663,6 +700,7 @@ function editProject(i){
   $('f-studio').value=p.studio||''; vwr.value=p.viewer||'';
   $('f-caption').value=p.caption||''; $('f-notes').value=p.notes||'';
   $('f-featured').checked=!!p.featured; $('f-consent').checked=!!p.consent; $('f-xr').checked=!!p.xr; checkSize(p.viewer||'');
+  $('f-intro').checked=!!p.intro; $('f-intro-up').value=p.introUp||'-y'; $('f-intro-turn').value=String(p.introTurn||0); syncIntroOpts();
   if(p.poster && !p.poster.startsWith('data:')){ thumbUrl.value=p.poster; } else thumbUrl.value='';
   setThumb(p.poster||'');
   { const rv=resolveViewer(p.viewer||''); if(rv){ pf.src=rv; pe.classList.add('on'); } }
@@ -683,7 +721,7 @@ function renderAdmin(){
     const thumb = p.poster ? `<img class="rthumb" src="${esc(p.poster)}" alt="">` : `<div class="rthumb" style="background:${placeholder(p.type)}"></div>`;
     row.innerHTML=`${thumb}
       <div class="rmeta">
-        <div class="rname">${esc(p.title)} ${p.featured?'<span class="rstar">★ lead</span>':''}</div>
+        <div class="rname">${esc(p.title)} ${p.featured?'<span class="rstar">★ lead</span>':''}${p.intro?'<span class="rintro">in intro</span>':''}</div>
         <div class="rsub">${[esc(p.author),p.type?esc(p.type):'',p.year?esc(p.year):''].filter(Boolean).join(' · ')}${p.viewer?'':' · <span style="color:#B23A48">no link</span>'}${p.consent?'':' · <span style="color:var(--slate)">name hidden</span>'}</div>
       </div>
       <div class="racts">
