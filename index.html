@@ -98,6 +98,78 @@
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+
+<!-- ==========================================================================
+     INTRO SPLASH — gate. Runs before paint so the hub never flashes first.
+     Plays once per browser session. Add ?intro to the URL to replay it.
+     ========================================================================== -->
+<script>
+(function(){
+  var d=document.documentElement;
+  try{ var t=localStorage.getItem('archive-theme'); if(t) d.setAttribute('data-theme',t);
+       else if(matchMedia('(prefers-color-scheme: dark)').matches) d.setAttribute('data-theme','dark'); }catch(e){}
+  var force=/[?&]intro\b/.test(location.search);
+  var seen=false; try{ seen=sessionStorage.getItem('archive-intro-seen')==='1'; }catch(e){}
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(force || (!seen && !reduce)){
+    d.classList.add('intro-pending');
+    /* safety net: if three.js can't load (offline, blocked CDN) show the hub anyway */
+    setTimeout(function(){ if(!window.__introStarted) d.classList.remove('intro-pending'); },3500);
+  }
+})();
+</script>
+<style>
+  html.intro-pending body,html.intro-open body{overflow:hidden}
+  html.intro-pending body::after{content:"";position:fixed;inset:0;background:var(--paper);z-index:999}
+
+  #intro{position:fixed;inset:0;z-index:1000;background:var(--paper);color:var(--ink);
+    display:grid;grid-template-rows:auto 1fr auto;padding:22px max(28px,4vw) max(30px,4vh);
+    transition:opacity .85s cubic-bezier(.4,0,.2,1)}
+  #intro-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  #intro > *:not(canvas){position:relative;pointer-events:none}
+  #intro button{pointer-events:auto}
+
+  .intro-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .intro-inst{margin:0;font-size:13.5px;line-height:1.5;color:var(--slate)}
+  .intro-inst strong{color:var(--ink);font-weight:500}
+  .intro-skip{white-space:nowrap;appearance:none;background:none;border:0;padding:6px 0;font:inherit;font-size:13.5px;color:var(--slate);
+    cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+  .intro-skip:hover{color:var(--ink)}
+
+  .intro-bottom{grid-row:3;display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
+  .intro-title{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(52px,8.6vw,132px);
+    letter-spacing:-.045em;line-height:.9;margin:0;opacity:0;transform:translateY(.12em);
+    transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.16,1,.3,1),letter-spacing 1.8s cubic-bezier(.16,1,.3,1)}
+  .intro-lede{max-width:40ch;margin:18px 0 0;font-size:16px;line-height:1.6;color:var(--slate);opacity:0;transition:opacity 1s ease .35s}
+  #intro.titled .intro-title{opacity:1;transform:none;letter-spacing:-.035em}
+  #intro.titled .intro-lede{opacity:1}
+
+  .intro-cta{display:flex;flex-direction:column;align-items:flex-end;gap:14px}
+  .intro-feature{text-align:right;opacity:0;transform:translateY(6px);transition:opacity .9s ease,transform 1s cubic-bezier(.16,1,.3,1)}
+  .intro-feature p{margin:0}
+  .intro-f-title{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:19px;letter-spacing:-.01em;color:var(--ink)}
+  .intro-f-by{font-size:13.5px;color:var(--slate);margin-top:2px}
+  #intro.featured .intro-feature{opacity:1;transform:none}
+  .intro-readout{margin:0;font-size:13px;color:var(--slate);font-variant-numeric:tabular-nums}
+  .intro-readout b{color:var(--teal);font-weight:500}
+  .intro-enter{appearance:none;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);
+    font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:17px;letter-spacing:-.005em;
+    padding:14px 26px 13px;border-radius:4px;cursor:pointer;opacity:0;transform:translateY(8px);visibility:hidden;
+    transition:opacity .6s ease,transform .6s cubic-bezier(.16,1,.3,1),background .2s,border-color .2s,visibility 0s .6s}
+  #intro.ready .intro-enter{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  .intro-enter:hover{background:var(--teal);border-color:var(--teal)}
+  #intro button:focus-visible{outline:2px solid var(--teal);outline-offset:4px}
+
+  #intro.leaving .intro-top,#intro.leaving .intro-bottom{opacity:0;transition:opacity .35s ease}
+  #intro.gone{opacity:0}
+
+  @media (max-width:700px){
+    .intro-bottom{flex-direction:column;align-items:stretch;gap:22px}
+    .intro-cta{align-items:stretch}
+    .intro-feature{text-align:left}
+    .intro-lede{font-size:15px}
+  }
+</style>
 </head>
 <body>
 
@@ -252,6 +324,394 @@ build(); resize();
 window.addEventListener('resize',()=>{ clearTimeout(window.__rz); window.__rz=setTimeout(()=>{ resize(); if(reduce) draw(1,0); },150); });
 if(!reduce) raf=requestAnimationFrame(loop); else draw(1,0);
 themeBtn.addEventListener('click',()=>{ if(reduce) draw(1,0); });
+</script>
+
+<!-- ==========================================================================
+     INTRO SPLASH — three.js. The ATU mark "trains" like a Gaussian splat,
+     holds, then its splats fly apart and rebuild as a real scan from the
+     archive (read straight from its .sog file). Pointer disturbs the splats;
+     Enter dives through the cloud into the hub.
+     ========================================================================== -->
+<script type="module">
+/* EDIT HERE — the featured scan the logo turns into.
+   axes maps the scan's axes to screen right, up, toward-viewer ("z,-y,x" means
+   right = scan z, up = minus scan y, toward you = scan x). Change it if a model
+   comes in sideways or upside down. */
+const FEATURE = {
+  src:   'models/architecture/Sligo Train Station Model.sog',
+  title: 'Sligo Transportation Hub',
+  by:    'Li Ling',
+  note:  'Studio 5, 2025/26',
+  axes:  'z,-y,x'
+};
+const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+const root = document.documentElement;
+
+if (root.classList.contains('intro-pending')) startIntro();
+
+async function startIntro(){
+  let THREE;
+  try { THREE = await import(THREE_URL); } catch(e){ return abort(); }
+  if (!root.classList.contains('intro-pending')) return;
+  window.__introStarted = true;
+
+  const MOBILE = Math.min(innerWidth, innerHeight) < 700;
+  const N = MOBILE ? 32000 : 70000;
+  const RESOLVE = 1.6, LOGO_DONE = 4.3, MORPH_AT = 5.4;
+  const H = (typeof HUB !== 'undefined') ? HUB : { title:'Design Archive', institution:'ATU Sligo', sub:'', logo:'logo.png' };
+  const fmt = n => n.toLocaleString('en-IE');
+
+  /* ---------- overlay ---------- */
+  const el = document.createElement('div');
+  el.id = 'intro';
+  el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label', H.title + ' introduction');
+  el.innerHTML = `
+    <canvas id="intro-gl" aria-hidden="true"></canvas>
+    <div class="intro-top">
+      <p class="intro-inst"><strong></strong><br><span></span></p>
+      <button type="button" class="intro-skip">Skip intro</button>
+    </div>
+    <div class="intro-bottom">
+      <div>
+        <h1 class="intro-title"></h1>
+        <p class="intro-lede">Student work and exhibitions, scanned in 3D to orbit and walk through in your browser.</p>
+      </div>
+      <div class="intro-cta">
+        <div class="intro-feature" aria-live="polite"><p class="intro-f-title"></p><p class="intro-f-by"></p></div>
+        <p class="intro-readout"><b id="intro-count">0</b> <span id="intro-count-label">of ${fmt(N)} splats resolved</span></p>
+        <button type="button" class="intro-enter">Enter the archive</button>
+      </div>
+    </div>`;
+  el.querySelector('.intro-inst strong').textContent = H.institution;
+  el.querySelector('.intro-inst span').textContent = H.sub;
+  el.querySelector('.intro-title').textContent = H.title;
+  el.querySelector('.intro-f-title').textContent = FEATURE.title;
+  el.querySelector('.intro-f-by').textContent = [FEATURE.by, FEATURE.note].filter(Boolean).join(', ');
+  document.body.appendChild(el);
+
+  const canvas = el.querySelector('#intro-gl');
+  const countEl = el.querySelector('#intro-count'), countLabel = el.querySelector('#intro-count-label');
+  const enterBtn = el.querySelector('.intro-enter'), skipBtn = el.querySelector('.intro-skip');
+
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias:false, alpha:true, powerPreference:'high-performance' }); }
+  catch(e){ el.remove(); return abort(); }
+  root.classList.remove('intro-pending'); root.classList.add('intro-open');
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setClearColor(0x000000, 0);
+
+  /* ---------- logo splats ---------- */
+  const logo = await sampleLogo(H.logo, N);
+  const dark = root.getAttribute('data-theme') === 'dark';
+  const start = new Float32Array(N * 3), seed = new Float32Array(N * 4), ends = new Float32Array(N);
+  const g = () => { let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2831853 * Math.random()); };
+  for (let i = 0; i < N; i++){
+    start.set([g()*1.5, g()*1.1, g()*1.4 + 0.4], i*3);
+    const delay = 0.35 + (1 - (logo[i*3+1] + 1) / 2) * 1.5 + Math.random() * 0.75;
+    seed.set([Math.random(), delay, 0, Math.random()], i*4);   // z = scan stagger, filled later
+    ends[i] = delay + RESOLVE;
+  }
+  ends.sort();
+
+  const scanPos = new Float32Array(logo);           // until the scan loads, "scan" = logo
+  const scanCol = new Float32Array(N * 4), scanSize = new Float32Array(N).fill(0.017);
+  const idx = new Uint32Array(N); for (let i = 0; i < N; i++) idx[i] = i;
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(scanPos, 3));
+  geo.setAttribute('aLogo', new THREE.BufferAttribute(logo, 3));
+  geo.setAttribute('aStart', new THREE.BufferAttribute(start, 3));
+  geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
+  geo.setAttribute('aScan', new THREE.BufferAttribute(scanCol, 4));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(scanSize, 1));
+  const index = new THREE.BufferAttribute(idx, 1); index.setUsage(THREE.DynamicDrawUsage); geo.setIndex(index);
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10);
+
+  const col = dark ? [125/255, 172/255, 170/255] : [47/255, 97/255, 100/255];
+  const uniforms = {
+    uTime:{value:0}, uScanT:{value:-1}, uExit:{value:0}, uScale:{value:1},
+    uMouse:{value:new THREE.Vector3(99,99,0)}, uMouseStr:{value:0},
+    uColor:{value:new THREE.Vector3(...col)}, uAlpha:{value: dark ? 0.5 : 0.72},
+    uSizeStart:{value:0.05}, uSizeEnd:{value: MOBILE ? 0.02 : 0.017}
+  };
+  const mat = new THREE.ShaderMaterial({
+    uniforms, transparent:true, depthWrite:false, depthTest:false, blending:THREE.NormalBlending,
+    vertexShader: `
+      attribute vec3 aStart, aLogo; attribute vec4 aSeed, aScan; attribute float aSize;
+      uniform float uTime, uScanT, uExit, uScale, uMouseStr, uSizeStart, uSizeEnd, uAlpha;
+      uniform vec3 uMouse, uColor;
+      varying vec4 vCol; varying float vSharp;
+      float ease(float x){ return x < .5 ? 4.*x*x*x : 1. - pow(-2.*x + 2., 3.) / 2.; }
+      void main(){
+        float r = aSeed.x;
+        float e = ease(clamp((uTime - aSeed.y) / ${RESOLVE.toFixed(2)}, 0., 1.));
+        vec3 p = mix(aStart, aLogo, e);
+        float t = uTime * .55 + r * 6.2831;
+        p += vec3(sin(t + aStart.y*1.7), cos(t*.9 + aStart.x*1.3), sin(t*.7 + aStart.z*1.5)) * .28 * (1. - e);
+        p.xy += vec2(sin(uTime*1.3 + r*40.), cos(uTime*1.1 + r*31.)) * .0022 * e;
+
+        // logo -> scan: the model builds from the ground up, splats arcing over
+        float m = ease(clamp((uScanT - aSeed.z * 1.2) / 1.5, 0., 1.));
+        p = mix(p, position, m) + vec3(sin(r*40.) * .35, .45 + fract(r*13.) * .3, cos(r*31.) * .35) * sin(m * 3.14159);
+
+        vec2 d = p.xy - uMouse.xy;
+        float f = exp(-dot(d, d) / .028) * uMouseStr * (1. - .5*m);
+        p.xy += normalize(d + 1e-5) * f * .16; p.z += f * .14;
+        p += normalize(p + vec3(r - .5, fract(r*7.) - .5, 1.2)) * uExit * uExit * (2.2 + r*3.5);
+
+        vec4 mv = modelViewMatrix * vec4(p, 1.);
+        gl_Position = projectionMatrix * mv;
+        float s = mix(mix(uSizeStart, uSizeEnd, e), aSize, m) * (1. + f*.8);
+        gl_PointSize = max(1., s * uScale / -mv.z);
+        vec3 lc = uColor * (.82 + aSeed.w * .36);
+        float la = mix(.1, 1., e) * uAlpha;
+        vCol = vec4(mix(lc, aScan.rgb, m), mix(la, aScan.a, m) * (1. - smoothstep(.25, 1., uExit)));
+        vSharp = mix(mix(1.6, 4.5, e), 3.1, m);
+      }`,
+    fragmentShader: `
+      varying vec4 vCol; varying float vSharp;
+      void main(){
+        vec2 c = gl_PointCoord - .5; float r2 = dot(c, c) * 4.;
+        if (r2 > 1.) discard;
+        gl_FragColor = vec4(vCol.rgb, exp(-r2 * vSharp) * vCol.a);
+      }`
+  });
+
+  const scene = new THREE.Scene(), group = new THREE.Group();
+  group.add(new THREE.Points(geo, mat)); scene.add(group);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 50);
+  let dist = 4, W = 1, Hh = 1;
+  function resize(){
+    W = innerWidth; Hh = innerHeight;
+    renderer.setSize(W, Hh, false);
+    camera.aspect = W / Hh; camera.updateProjectionMatrix();
+    const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const wide = camera.aspect > 1.1;
+    const viewH = wide ? 2 / 0.6 : Math.max(2 / 0.46, 2.45 / camera.aspect);
+    dist = viewH / 2 / tanH;
+    group.position.y = viewH * (wide ? 0.07 : 0.13);
+    if (wide) camera.setViewOffset(W, Hh, -W * 0.19, 0, W, Hh); else camera.clearViewOffset();
+    uniforms.uScale.value = renderer.domElement.height / (2 * tanH);
+  }
+  resize(); addEventListener('resize', resize);
+
+  /* ---------- load the featured scan in the background ---------- */
+  let scanReady = false, scanCount = 0, morphStart = null;
+  loadScan().then(ok => { scanReady = ok; }).catch(() => {});
+
+  async function loadScan(){
+    let buf;
+    if (window.__FEATURE_SOG_B64){ const b = atob(window.__FEATURE_SOG_B64); buf = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) buf[i] = b.charCodeAt(i); }
+    else { const r = await fetch(encodeURI(FEATURE.src)); if (!r.ok) return false; buf = new Uint8Array(await r.arrayBuffer()); }
+    const s = await readSOG(buf, renderer);
+    if (!s) return false;
+    scanCount = s.count;
+
+    // keep splats that actually show; subsample or repeat to fill N
+    const keep = [];
+    for (let i = 0; i < s.count; i++) if (s.op[i] > 0.06) keep.push(i);
+    for (let i = keep.length - 1; i > 0; i--){ const j = Math.random() * (i + 1) | 0; [keep[i], keep[j]] = [keep[j], keep[i]]; }
+
+    // axes remap, then fit into the frame the logo occupies (robust bounds ignore floaters)
+    const ax = FEATURE.axes.split(',').map(a => ({ k:'xyz'.indexOf(a.trim().slice(-1)), s:a.trim()[0] === '-' ? -1 : 1 }));
+    const P = new Float32Array(keep.length * 3);
+    keep.forEach((k, j) => { for (let a = 0; a < 3; a++) P[j*3+a] = s.pos[k*3 + ax[a].k] * ax[a].s; });
+    const q = (a, f) => { const v = []; for (let j = 0; j < keep.length; j += 7) v.push(P[j*3+a]); v.sort((x, y) => x - y); return v[Math.floor(f * (v.length - 1))]; };
+    const lo = [0,1,2].map(a => q(a, 0.005)), hi = [0,1,2].map(a => q(a, 0.995));
+    const k = (camera.aspect < 1.1 ? 1.45 : 1.8) / Math.max(hi[0] - lo[0], hi[1] - lo[1]);
+    const c = [0,1,2].map(a => (lo[a] + hi[a]) / 2);
+
+    for (let i = 0; i < N; i++){
+      const j = i % keep.length, src = keep[j];
+      const x = (P[j*3] - c[0]) * k, y = (P[j*3+1] - c[1]) * k + 0.12, z = (P[j*3+2] - c[2]) * k;
+      scanPos.set([x, y, z], i*3);
+      scanCol.set([s.col[src*3], s.col[src*3+1], s.col[src*3+2], Math.min(1, s.op[src] * 1.05)], i*4);
+      scanSize[i] = Math.min(0.07, Math.max(0.009, s.size[src] * k * 4.2));
+      seed[i*4+2] = Math.min(1, Math.max(0, (y + 0.9) / 2.0)) + Math.random() * 0.12;   // ground first
+    }
+    ['position','aScan','aSize','aSeed'].forEach(n => geo.attributes[n].needsUpdate = true);
+    return true;
+  }
+
+  /* ---------- back-to-front ordering so the scan composites like a splat ---------- */
+  const keys = new Uint16Array(N), counts = new Uint32Array(65536), camL = new THREE.Vector3(), fwd = new THREE.Vector3();
+  function sortSplats(m){
+    camL.copy(camera.position); group.worldToLocal(camL);
+    fwd.set(0, 0, 0).sub(camL).normalize();
+    let mn = Infinity, mx = -Infinity; const dep = sortSplats.d || (sortSplats.d = new Float32Array(N));
+    for (let i = 0; i < N; i++){
+      const x = logo[i*3] + (scanPos[i*3] - logo[i*3]) * m, y = logo[i*3+1] + (scanPos[i*3+1] - logo[i*3+1]) * m, z = logo[i*3+2] + (scanPos[i*3+2] - logo[i*3+2]) * m;
+      const v = (x - camL.x) * fwd.x + (y - camL.y) * fwd.y + (z - camL.z) * fwd.z;
+      dep[i] = v; if (v < mn) mn = v; if (v > mx) mx = v;
+    }
+    const sc = 65535 / Math.max(1e-6, mx - mn); counts.fill(0);
+    for (let i = 0; i < N; i++){ const kk = 65535 - ((dep[i] - mn) * sc | 0); keys[i] = kk; counts[kk]++; }   // far first
+    for (let i = 1; i < 65536; i++) counts[i] += counts[i-1];
+    for (let i = N - 1; i >= 0; i--) idx[--counts[keys[i]]] = i;
+    index.needsUpdate = true;
+  }
+
+  /* ---------- pointer ---------- */
+  const ZERO = new THREE.Vector2(), ndc = new THREE.Vector2(9, 9), sm = new THREE.Vector2(), ray = new THREE.Raycaster();
+  const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
+  let pointerIn = false;
+  const onMove = e => { ndc.set(e.clientX / W * 2 - 1, -(e.clientY / Hh) * 2 + 1); pointerIn = true; };
+  addEventListener('pointermove', onMove); addEventListener('pointerdown', onMove);
+  document.addEventListener('pointerleave', () => pointerIn = false);
+
+  /* ---------- enter / skip ---------- */
+  let exitAt = null, t0 = performance.now(), raf, lastCount = -1, titled = false, ready = false, frameNo = 0, swapped = false;
+  function enter(){
+    if (exitAt !== null) return;
+    exitAt = performance.now();
+    try { sessionStorage.setItem('archive-intro-seen', '1'); } catch(e){}
+    el.classList.add('leaving');
+    setTimeout(() => el.classList.add('gone'), 550);
+    setTimeout(cleanup, 1450);
+  }
+  enterBtn.addEventListener('click', enter); skipBtn.addEventListener('click', enter);
+  const onKey = e => { if (e.key === 'Escape' || (ready && (e.key === 'Enter' || e.key === ' ') && document.activeElement === document.body)) enter(); };
+  const onWheel = e => { if (ready && e.deltaY > 25) enter(); };
+  addEventListener('keydown', onKey); addEventListener('wheel', onWheel, { passive:true });
+
+  const sm01 = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+  function frame(now){
+    const t = (now - t0) / 1000; frameNo++;
+    uniforms.uTime.value = t;
+
+    if (morphStart === null && scanReady && t > MORPH_AT) morphStart = t;
+    const st = morphStart === null ? -1 : t - morphStart;
+    uniforms.uScanT.value = st;
+    const m = sm01(st / 2.7);                                   // overall morph progress
+
+    if (morphStart === null){
+      let lo = 0, hi = N; while (lo < hi){ const k = (lo + hi) >> 1; if (ends[k] <= t) lo = k + 1; else hi = k; }
+      if (lo !== lastCount){ lastCount = lo; countEl.textContent = fmt(lo); }
+    } else if (!swapped && st > 1.2){
+      swapped = true; el.classList.add('featured');
+      countEl.textContent = fmt(scanCount); countLabel.textContent = 'splats from a 3D scan';
+    }
+    if (!titled && t > 1.1){ titled = true; el.classList.add('titled'); }
+    if (!ready && t > 2.4){ ready = true; el.classList.add('ready'); }
+
+    sm.lerp(pointerIn ? ndc : ZERO, 0.05);
+    const ex = exitAt === null ? 0 : Math.min(1, (now - exitAt) / 1300);
+    uniforms.uExit.value = ex;
+    // camera: gentle sway for the logo, a wider slow orbit looking down on the model
+    const az = Math.sin(t * 0.17) * (0.26 + m * 0.34) + sm.x * 0.14;
+    const el2 = 0.06 + m * 0.2 + Math.sin(t * 0.11) * 0.04 + sm.y * 0.08;
+    const r = dist * (1 - ex * ex * 0.55);
+    camera.position.set(Math.sin(az) * Math.cos(el2) * r, Math.sin(el2) * r, Math.cos(az) * Math.cos(el2) * r);
+    camera.lookAt(0, 0, 0);
+
+    ray.setFromCamera(sm, camera);
+    if (ray.ray.intersectPlane(plane, hit)){ group.worldToLocal(hit); uniforms.uMouse.value.copy(hit); }
+    uniforms.uMouseStr.value += ((pointerIn && ex === 0 ? 1 : 0) - uniforms.uMouseStr.value) * 0.06;
+
+    if (morphStart !== null && frameNo % 2 === 0) sortSplats(m);
+    renderer.render(scene, camera);
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+
+  function cleanup(){
+    cancelAnimationFrame(raf);
+    removeEventListener('resize', resize); removeEventListener('pointermove', onMove); removeEventListener('pointerdown', onMove);
+    removeEventListener('keydown', onKey); removeEventListener('wheel', onWheel);
+    geo.dispose(); mat.dispose(); renderer.dispose(); renderer.forceContextLoss();
+    el.remove(); root.classList.remove('intro-open');
+  }
+
+  /* ---------- logo sampling (waves tilt forward as a ground plane) ---------- */
+  async function sampleLogo(src, n){
+    const out = new Float32Array(n * 3);
+    let px = null, w = 0, h = 0;
+    try {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+      h = 420; w = Math.round(h * img.naturalWidth / img.naturalHeight);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const cx = c.getContext('2d', { willReadFrequently:true }); cx.drawImage(img, 0, 0, w, h);
+      const data = cx.getImageData(0, 0, w, h).data; px = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+        const k = (y * w + x) * 4;
+        if (data[k+3] > 150 && data[k] + data[k+1] + data[k+2] < 600) px.push(x, y);
+      }
+      if (px.length < 200) px = null;
+    } catch(e){ px = null; }
+    for (let i = 0; i < n; i++){
+      let x, y;
+      if (px){ const k = (Math.random() * (px.length / 2) | 0) * 2; x = (px[k] + Math.random() - w / 2) / (h / 2); y = -(px[k+1] + Math.random() - h / 2) / (h / 2); }
+      else if (typeof LOGO !== 'undefined'){ const k = (Math.random() * (LOGO.length / 2) | 0) * 2; x = LOGO[k] / 1000 + (Math.random() - .5) * .03; y = -LOGO[k+1] / 1000 + (Math.random() - .5) * .03; }
+      else { x = (Math.random() - .5) * 1.6; y = (Math.random() - .5) * 2; }
+      let z = (Math.random() - .5) * 0.05;
+      if (y < -0.3) z += (-0.3 - y) * 0.55;
+      out.set([x, y, z], i * 3);
+    }
+    return out;
+  }
+}
+
+/* ---------- SOG (v2) reader: zip → webp textures → splat positions, colours, sizes ----------
+   Images are decoded through WebGL so colour indices and opacity survive exactly
+   (a 2D canvas would premultiply alpha and corrupt them). */
+async function readSOG(bytes, renderer){
+  const files = await unzip(bytes);
+  if (!files['meta.json']) return null;
+  const meta = JSON.parse(new TextDecoder().decode(files['meta.json']));
+  if (meta.version !== 2) return null;
+  const gl = renderer.getContext();
+  const pixels = async name => {
+    const bmp = await createImageBitmap(new Blob([files[name]], { type:'image/webp' }), { premultiplyAlpha:'none', colorSpaceConversion:'none' });
+    const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
+    const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const out = new Uint8Array(bmp.width * bmp.height * 4);
+    gl.readPixels(0, 0, bmp.width, bmp.height, gl.RGBA, gl.UNSIGNED_BYTE, out);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteFramebuffer(fb); gl.deleteTexture(tex); bmp.close();
+    renderer.resetState();
+    return out;
+  };
+  const n = meta.count, { mins, maxs } = meta.means;
+  const [ml, mu, sh, sc] = [await pixels(meta.means.files[0]), await pixels(meta.means.files[1]), await pixels(meta.sh0.files[0]), await pixels(meta.scales.files[0])];
+  const cb = meta.sh0.codebook, scb = meta.scales.codebook, C0 = 0.28209479177387814;
+  const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), op = new Float32Array(n), size = new Float32Array(n);
+  for (let i = 0; i < n; i++){
+    const s = [0, 0, 0];
+    for (let a = 0; a < 3; a++){
+      const v = mins[a] + (maxs[a] - mins[a]) * (((mu[i*4+a] << 8) | ml[i*4+a]) / 65535);
+      pos[i*3+a] = Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
+      col[i*3+a] = Math.min(1, Math.max(0, 0.5 + C0 * cb[sh[i*4+a]]));
+      s[a] = Math.exp(scb[sc[i*4+a]]);
+    }
+    s.sort((x, y) => y - x);
+    op[i] = sh[i*4+3] / 255;
+    size[i] = Math.sqrt(s[0] * s[1]);          // footprint of the flattened disc
+  }
+  return { count:n, pos, col, op, size };
+}
+
+async function unzip(u8){
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), out = {};
+  let e = u8.length - 22; while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) return out;
+  let p = dv.getUint32(e + 16, true); const count = dv.getUint16(e + 10, true);
+  for (let i = 0; i < count; i++){
+    const method = dv.getUint16(p + 10, true), size = dv.getUint32(p + 20, true);
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl));
+    const data = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true);
+    let body = u8.subarray(data, data + size);
+    if (method === 8) body = new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    out[name] = body;
+    p += 46 + nl + xl + cl;
+  }
+  return out;
+}
+
+function abort(){ document.documentElement.classList.remove('intro-pending'); }
 </script>
 </body>
 </html>
