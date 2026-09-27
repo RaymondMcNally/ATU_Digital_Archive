@@ -43,23 +43,7 @@
         }
     },
     "animTracks": [],
-    "cameras": [
-        {
-            "initial": {
-                "position": [
-                    -1.143903374671936,
-                    0.785248339176178,
-                    1.143903374671936
-                ],
-                "target": [
-                    0,
-                    0.5,
-                    0
-                ],
-                "fov": 51
-            }
-        }
-    ],
+    "cameras": [],
     "annotations": [],
     "startMode": "default"
 }
