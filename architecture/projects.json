@@ -70,7 +70,7 @@
     "type": "Final Exhibition",
     "year": "2025/26",
     "studio": "Design Studio 5",
-    "viewer": "models/architecture/5th Year Exhibition.sog",
+    "viewer": "5th Year Exhibition.sog",
     "poster": "../posters/architecture/optimism-at-the-edge-5th-year-studio.jpg",
     "caption": "",
     "notes": "",
@@ -121,5 +121,22 @@
     "notes": "Aerial capture with Matrice 300 with P1 payload flown at 30m, Oblique & Lidar Grid.",
     "consent": true,
     "featured": false
+  },
+  {
+    "author": "Year 1",
+    "title": "Concept Model",
+    "type": "Concept Model",
+    "year": "2026",
+    "studio": "Studio 1",
+    "viewer": "Student Concept Model.sog",
+    "poster": "../posters/architecture/concept-model-year-1.jpg",
+    "caption": "Student Concept Model in Black Wire",
+    "notes": "Beautiful example of a concept model.",
+    "consent": true,
+    "xr": true,
+    "featured": false,
+    "intro": true,
+    "introUp": "-y",
+    "introTurn": 0
   }
 ]
