@@ -75,7 +75,11 @@
     "caption": "",
     "notes": "",
     "consent": true,
-    "featured": true
+    "xr": false,
+    "featured": true,
+    "intro": true,
+    "introUp": "-y",
+    "introTurn": 0
   },
   {
     "author": "Patrick",
