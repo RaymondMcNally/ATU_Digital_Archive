@@ -413,7 +413,10 @@ const GITHUB = { owner:"", repo:"", branch:"main", path:"architecture/projects.j
 function resolveViewer(v,bg){
   if(!v) return '';
   let s=v.trim();
-  if(/^https?:\/\//i.test(s)) return s;                      // full URL (superspl.at / absolute) as-is
+  const tag=s.match(/src=["']([^"']+)["']/i); if(tag) s=tag[1];            // a pasted <iframe> embed snippet: use its src
+  const ss=s.match(/^https?:\/\/(?:www\.)?superspl\.at\/(?:scene\/|s\?id=|view\?id=)([A-Za-z0-9]+)/i);
+  if(ss) return `https://superspl.at/s?id=${ss[1]}`;                        // superspl.at scene page -> its bare embed viewer
+  if(/^https?:\/\//i.test(s)) return s;                      // any other full URL as-is
   if(/(\.sog|\.compressed\.ply|\.ply)$/i.test(s)){          // a scene file in ANY path form
     const name=s.split('/').pop();                            // -> use just the filename
     return `${VIEWER_BASE}?content=${(MODELS_BASE+name).replace(/ /g,'%20')}${VIEWER_PARAMS}${bg==='white'?'&settings=settings-white.json':''}`;
