@@ -14,7 +14,20 @@
     "featured": false,
     "intro": true,
     "introUp": "-y",
-    "introTurn": 90
+    "introTurn": 90,
+    "docs": [
+      {
+        "label": "BRIEF_Visual_Literacy__Self_Portrait 2026",
+        "src": "../documents/architecture/sustainability-aibhainn-mulligan-brief-visual-literacy-self-.pdf",
+        "size": 2047063
+      },
+      {
+        "label": "Site Analysis using LLM Model",
+        "src": "../documents/architecture/sustainability-aibhainn-mulligan-site-analysis-using-llm-mod.pdf",
+        "size": 1568868
+      }
+    ],
+    "docConsent": true
   },
   {
     "author": "Li Ling",
