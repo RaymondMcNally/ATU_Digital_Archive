@@ -144,6 +144,29 @@
   .v-rail .r-title{font-size:15px;color:#9BA0A2;margin:3px 0 22px}
   .v-meta{display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font-size:14px;margin-bottom:24px}
   .v-meta dt{color:#7E8385}.v-meta dd{margin:0;color:#D7D9D9}
+  /* documents */
+  .badge-doc{top:auto;bottom:12px;left:12px;background:rgba(23,25,26,.7)}
+  .r-docs-h{font-size:12.5px;color:#7E8385;margin:0 0 10px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
+  .r-docs{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px}
+  .r-doc{display:flex;align-items:center;gap:12px;width:100%;text-align:left;appearance:none;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:10px 12px;color:#E8E8E6;font:inherit;font-size:14px;cursor:pointer;text-decoration:none}
+  .r-doc:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28)}
+  .r-doc svg{flex:none;width:22px;height:22px;color:#8FC5BE}
+  .r-doc span{display:flex;flex-direction:column;min-width:0}
+  .r-doc b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .r-doc small{font-size:12px;color:#8B9092}
+  .doc-reader{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;background:#0C0E0F}
+  .doc-reader.on{display:flex}
+  .doc-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08);color:#E8E8E6}
+  .doc-bar b{flex:1;font-weight:500;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .doc-bar a.v-btn{text-decoration:none}
+  .doc-reader iframe{flex:1;width:100%;border:0;background:#525659}
+  .doc-rows{display:flex;flex-direction:column;gap:8px;margin:6px 0 12px}
+  .doc-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--hair);border-radius:4px;background:var(--paper-2)}
+  .doc-row input{margin:0}
+  .doc-row small{font-size:12px;color:var(--slate);white-space:nowrap}
+  .doc-row button{appearance:none;border:0;background:none;color:#B23A48;font:inherit;font-size:13px;cursor:pointer;padding:4px}
+  .doc-add{display:flex;gap:8px;flex-wrap:wrap}
+  .doc-add input[type=text]{flex:1;min-width:160px;margin:0}
   .r-notes-h{font-size:12.5px;color:#7E8385;margin:0 0 8px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
   .r-notes{font-size:14.5px;line-height:1.62;color:#C9CCCD;margin:0;white-space:pre-wrap}
   .r-notes.empty-note{color:#6C7173;font-style:italic}
@@ -336,6 +359,20 @@
 
         <div class="field"><label>Caption <span style="color:var(--slate)">(lead plate only)</span></label><input type="text" id="f-caption"></div>
         <div class="field"><label>Teaching notes</label><textarea id="f-notes" placeholder="Shown in the viewer's Notes panel."></textarea></div>
+        <div class="field" id="doc-field">
+          <label>Documents</label>
+          <p class="hint" style="margin-top:0">Thesis, drawing sets, sketchbooks. Each appears as a button in the viewer's Notes panel.</p>
+          <div class="doc-rows" id="doc-rows"></div>
+          <div class="doc-add">
+            <input type="text" id="doc-label" placeholder="Label, e.g. Thesis, Drawings (A1 sheets), Sketchbook">
+            <button type="button" class="abtn ghost" id="doc-file-btn">Add PDF&hellip;</button>
+            <button type="button" class="abtn ghost" id="doc-link-btn">Add link&hellip;</button>
+            <input type="file" id="doc-file" accept="application/pdf,.pdf" hidden>
+          </div>
+          <p class="hint" id="doc-hint">PDFs up to 25 MB are uploaded with the project when you publish or export. For larger files, add a link instead (OneDrive, SharePoint or the library repository).</p>
+          <label class="check" style="margin-top:12px"><input type="checkbox" id="f-docconsent"> Student has agreed to publish these documents</label>
+          <p class="hint">Documents stay hidden on the public pages until this is ticked.</p>
+        </div>
         <div class="field"><label class="check"><input type="checkbox" id="f-consent"> Show the student's full name publicly</label><p class="hint">Off = public pages show first name + initial only. The full name is always kept here for your records.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-xr"> Suitable for VR / XR viewing</label><p class="hint" id="xr-hint">Adds a VR badge and a headset symbol on the viewer. Leave off for large scenes that run poorly in a headset.</p></div>
         <div class="field"><label for="f-bg">Viewer background</label><select id="f-bg"><option value="">Dark (default)</option><option value="white">White</option></select><p class="hint">The background a visitor sees first when they open this scan. They can still switch it in the viewer. Applies to .sog files in this catalogue, not superspl.at links.</p></div>
@@ -560,6 +597,7 @@ function card(p,featured){
   else { poster.style.background=placeholder(p.type); poster.innerHTML=`<div class="ph"><div class="ph-title">${esc(p.title)}</div></div>`; }
   poster.insertAdjacentHTML('beforeend',`<span class="badge"><span class="dot"></span>${p.type?esc(p.type)+' model':'3D model'}</span>`);
   if(p.xr) poster.insertAdjacentHTML('beforeend',`<span class="badge badge-vr">${VR_ICON}VR</span>`);
+  { const nd=(p.docs||[]).filter(d=>d.src).length; if(nd && p.docConsent) poster.insertAdjacentHTML('beforeend',`<span class="badge badge-doc">${nd} ${nd===1?'document':'documents'}</span>`); }
   const cap=document.createElement('div'); cap.className='caption';
   const sub=[p.year,p.studio].filter(Boolean).map(s=>`<span>${esc(s)}</span>`).join('');
   cap.innerHTML=`<h2 class="plate-title">${esc(p.title)}</h2><p class="plate-author">${esc(maskName(p.author,p.consent))}</p>${featured&&p.caption?`<p class="plate-lead">${esc(p.caption)}</p>`:''}<div class="plate-sub">${sub}</div>`;
@@ -619,6 +657,124 @@ vBgBtn.onclick=()=>{
   const f=vStage.querySelector('iframe'); if(f) f.src=resolveViewer(vProject.viewer,vBg);
 };
 
+/* ==========================================================================
+   Documents: PDFs (or links) attached to a project, opened from the viewer.
+   A PDF added in the admin waits in this browser (IndexedDB) until you
+   export or publish; then it becomes documents/<catalogue>/<name>.pdf.
+   ========================================================================== */
+const DOCS_BASE = '../documents/' + MODELS_BASE.replace(/\/+$/,'').split('/').pop() + '/';
+const DOC_MAX = 25 * 1048576;
+const DOC_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>';
+const LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1 1"/><path d="M14 10a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1-1"/></svg>';
+const DOCDB = (() => {
+  let dbp;
+  const db = () => dbp || (dbp = new Promise((res, rej) => { const r = indexedDB.open('archive-docs', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  const run = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('files', mode), q = fn(t.objectStore('files')); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); }));
+  return { put:(k, v) => run('readwrite', s => s.put(v, k)), get:k => run('readonly', s => s.get(k)), del:k => run('readwrite', s => s.delete(k)) };
+})();
+const SHOWN_DOCS = {};                                                     // exported this session: path -> blob URL, until uploaded
+const fmtMB = n => n ? (n / 1048576 >= 1 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB') : '';
+const isLink = d => /^https?:\/\//i.test(d.src || '');
+async function docURL(d){
+  if (!d || !d.src) return '';
+  if (d.src.startsWith('pending:')){ const b = await DOCDB.get(d.src.slice(8)).catch(() => null); return b ? URL.createObjectURL(b) : ''; }
+  return SHOWN_DOCS[d.src] || d.src;
+}
+
+/* ---------- admin: the form's document list ---------- */
+let formDocs = [];
+function renderDocRows(){
+  $('doc-rows').innerHTML = '';
+  formDocs.forEach((d, i) => {
+    const row = document.createElement('div'); row.className = 'doc-row';
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = d.label || ''; inp.setAttribute('aria-label', 'Document label');
+    inp.oninput = () => d.label = inp.value;
+    const info = document.createElement('small');
+    info.textContent = isLink(d) ? 'Link' : d.src.startsWith('pending:') ? `PDF, ${fmtMB(d.size)}, not yet published` : `PDF${d.size ? ', ' + fmtMB(d.size) : ''}`;
+    const rm = document.createElement('button'); rm.type = 'button'; rm.textContent = 'Remove';
+    rm.onclick = () => { if (d.src.startsWith('pending:')) DOCDB.del(d.src.slice(8)).catch(() => {}); formDocs.splice(i, 1); renderDocRows(); };
+    row.append(inp, info, rm); $('doc-rows').appendChild(row);
+  });
+}
+function docHint(msg, bad){ const h = $('doc-hint'); h.textContent = msg; h.style.color = bad ? '#B23A48' : ''; }
+const DOC_HINT_BASE = $('doc-hint').textContent;
+$('doc-file-btn').onclick = () => $('doc-file').click();
+$('doc-file').onchange = async () => {
+  const f = $('doc-file').files[0]; $('doc-file').value = '';
+  if (!f) return;
+  if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf'){ docHint('That file is not a PDF.', true); return; }
+  if (f.size > DOC_MAX){ docHint(`${f.name} is ${fmtMB(f.size)}, over the 25 MB upload limit. Put it on OneDrive, SharePoint or the library repository and use Add link instead.`, true); return; }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  try { await DOCDB.put(id, f); } catch(e){ docHint('This browser could not store the PDF. Try again, or use a link.', true); return; }
+  formDocs.push({ label:$('doc-label').value.trim() || f.name.replace(/\.pdf$/i, ''), src:'pending:' + id, size:f.size });
+  $('doc-label').value = ''; docHint(DOC_HINT_BASE); renderDocRows();
+};
+$('doc-link-btn').onclick = () => {
+  const url = (prompt('Paste the link to the document (OneDrive, SharePoint, library repository):') || '').trim();
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)){ docHint('Links need to start with https://', true); return; }
+  formDocs.push({ label:$('doc-label').value.trim() || 'Document', src:url });
+  $('doc-label').value = ''; docHint(DOC_HINT_BASE); renderDocRows();
+};
+
+/* ---------- export / publish: pending PDFs become files ---------- */
+function bytesToB64(u8){ let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+async function extractDocs(list){
+  const used = new Set(), files = [];
+  list.forEach(p => (p.docs || []).forEach(d => { if (d.src && !d.src.startsWith('pending:') && !isLink(d)) used.add(d.src.split('/').pop()); }));
+  const json = [];
+  for (const p of list){
+    const q = { ...p };
+    if (Array.isArray(p.docs)){
+      q.docs = [];
+      for (const d of p.docs){
+        if (!d.src || !d.src.startsWith('pending:')){ q.docs.push({ ...d }); continue; }
+        const blob = await DOCDB.get(d.src.slice(8)).catch(() => null);
+        if (!blob) continue;                                               // lost from this browser: leave it out
+        const base = slug(`${p.title}-${p.author}-${d.label}`);
+        let name = `${base}.pdf`, n = 2; while (used.has(name)) name = `${base}-${n++}.pdf`; used.add(name);
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        files.push({ repo:`documents/${CAT}/${name}`, rel:DOCS_BASE + name, bytes, key:d.src.slice(8), pending:d.src, blob });
+        q.docs.push({ label:d.label, src:DOCS_BASE + name, size:d.size });
+      }
+    }
+    json.push(q);
+  }
+  return { json, files };
+}
+function applyDocs(files){
+  files.forEach(f => {
+    SHOWN_DOCS[f.rel] = URL.createObjectURL(f.blob);
+    DATA.forEach(p => (p.docs || []).forEach(d => { if (d.src === f.pending) d.src = f.rel; }));
+    formDocs.forEach(d => { if (d.src === f.pending) d.src = f.rel; });
+    DOCDB.del(f.key).catch(() => {});
+  });
+  save(); renderAdmin(); renderDocRows();
+}
+
+/* ---------- viewer: documents in the Notes panel, opened in a reader ---------- */
+const reader = document.createElement('div'); reader.className = 'doc-reader';
+reader.innerHTML = '<div class="doc-bar"><b></b><a class="v-btn" target="_blank" rel="noopener">Open in new tab</a><a class="v-btn" download>Download</a><button type="button" class="v-btn">Close</button></div><iframe title="Document"></iframe>';
+const rTitle = reader.querySelector('b'), rOpen = reader.querySelectorAll('a')[0], rDown = reader.querySelectorAll('a')[1], rFrame = reader.querySelector('iframe');
+reader.querySelector('button').onclick = () => { reader.classList.remove('on'); rFrame.src = 'about:blank'; };
+document.querySelector('.viewer-body').appendChild(reader);
+const phone = () => window.innerWidth < 760 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+async function openDoc(d){
+  if (isLink(d)){ window.open(d.src, '_blank', 'noopener'); return; }
+  const url = await docURL(d); if (!url) return;
+  if (phone()){ window.open(url, '_blank', 'noopener'); return; }         // phones show PDFs better full-screen
+  rTitle.textContent = d.label || 'Document'; rOpen.href = url; rDown.href = url;
+  rDown.setAttribute('download', (d.label || 'document').replace(/[^\w\- ]+/g, '') + '.pdf');
+  rFrame.src = url; reader.classList.add('on');
+}
+function docsPanel(p){
+  const docs = (p.docs || []).filter(d => d.src);
+  if (!docs.length || !p.docConsent) return '';
+  return `<p class="r-docs-h">Documents</p><ul class="r-docs">${docs.map((d, i) =>
+    `<li><button type="button" class="r-doc" data-doc="${i}">${isLink(d) ? LINK_ICON : DOC_ICON}<span><b>${esc(d.label || 'Document')}</b><small>${isLink(d) ? 'Opens in a new tab' : 'PDF' + (d.size ? ', ' + fmtMB(d.size) : '')}</small></span></button></li>`).join('')}</ul>`;
+}
+vRail.addEventListener('click', e => { const b = e.target.closest('[data-doc]'); if (b && vProject) openDoc((vProject.docs || []).filter(d => d.src)[+b.dataset.doc]); });
+
 function openViewer(p,trigger){
   lastFocused=trigger||document.activeElement;
   $('v-title').textContent=p.title;
@@ -629,11 +785,11 @@ function openViewer(p,trigger){
   else vStage.innerHTML=`<div class="v-empty"><h3>This plate isn't linked to a viewer yet</h3><p>Open the admin, edit this project, and add its <code>superspl.at</code> scene link.</p></div>`;
   if(p.viewer && p.xr) vStage.insertAdjacentHTML('beforeend',`<div class="vr-flag" title="VR-ready — put on a WebXR headset and use the viewer's VR button">${VR_ICON}<span>VR ready</span></div>`);
   const meta=[['Type',p.type],['Year',p.year],['Studio',p.studio]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('');
-  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl><p class="r-notes-h">Teaching notes</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
+  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl>${docsPanel(p)}<p class="r-notes-h">Teaching notes</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
   infoOpen=window.innerWidth>760; applyInfo();
   viewer.classList.add('on'); document.body.style.overflow='hidden'; $('v-close').focus();
 }
-function closeViewer(){ viewer.classList.remove('on'); vStage.innerHTML=''; vRail.innerHTML=''; document.body.style.overflow=''; if(lastFocused) lastFocused.focus(); }
+function closeViewer(){ reader.classList.remove('on'); rFrame.src='about:blank'; viewer.classList.remove('on'); vStage.innerHTML=''; vRail.innerHTML=''; document.body.style.overflow=''; if(lastFocused) lastFocused.focus(); }
 $('v-close').onclick=closeViewer;
 viewer.addEventListener('keydown',e=>{ if(e.key==='Escape') closeViewer(); });
 
@@ -716,7 +872,8 @@ $('proj-form').addEventListener('submit',e=>{
     studio:$('f-studio').value.trim(), viewer:vwr.value.trim(),
     poster:normPoster(pendingThumb), caption:$('f-caption').value.trim(),
     notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked, bg:$('f-bg').value||undefined,
-    intro:$('f-intro').checked, introUp:$('f-intro-up').value, introTurn:Number($('f-intro-turn').value)
+    intro:$('f-intro').checked, introUp:$('f-intro-up').value, introTurn:Number($('f-intro-turn').value),
+    docs:formDocs.filter(d=>d.src).map(d=>({ ...d, label:(d.label||'').trim()||'Document' })), docConsent:$('f-docconsent').checked
   };
   if(!p.author||!p.title){ return; }
   if(p.featured) DATA.forEach(x=>x.featured=false);
@@ -726,7 +883,7 @@ $('proj-form').addEventListener('submit',e=>{
 $('cancel-btn').onclick=resetForm;
 
 function resetForm(){
-  editIndex=null; pendingThumb='';
+  editIndex=null; pendingThumb=''; formDocs=[]; renderDocRows(); docHint(DOC_HINT_BASE);
   $('proj-form').reset(); syncIntroOpts(); $('intro-hint').style.color=''; setThumb(''); pe.classList.remove('on'); pf.src='about:blank'; { const xh=$('xr-hint'); if(xh){ xh.textContent=XR_HINT_BASE; xh.style.color=''; } }
   $('submit-btn').textContent='Add project'; $('cancel-btn').style.display='none';
 }
@@ -737,6 +894,7 @@ function editProject(i){
   $('f-studio').value=p.studio||''; vwr.value=p.viewer||'';
   $('f-caption').value=p.caption||''; $('f-notes').value=p.notes||'';
   $('f-featured').checked=!!p.featured; $('f-consent').checked=!!p.consent; $('f-xr').checked=!!p.xr; $('f-bg').value=p.bg==='white'?'white':''; checkSize(p.viewer||'');
+  formDocs=(p.docs||[]).map(d=>({ ...d })); renderDocRows(); $('f-docconsent').checked=!!p.docConsent;
   $('f-intro').checked=!!p.intro; $('f-intro-up').value=p.introUp||'-y'; $('f-intro-turn').value=String(p.introTurn||0); syncIntroOpts();
   if(p.poster && !p.poster.startsWith('data:')){ thumbUrl.value=p.poster; } else thumbUrl.value='';
   setThumb(p.poster||'');
@@ -758,7 +916,7 @@ function renderAdmin(){
     const thumb = p.poster ? `<img class="rthumb" src="${esc(posterSrc(p.poster))}" alt="">` : `<div class="rthumb" style="background:${placeholder(p.type)}"></div>`;
     row.innerHTML=`${thumb}
       <div class="rmeta">
-        <div class="rname">${esc(p.title)} ${p.featured?'<span class="rstar">★ lead</span>':''}${p.intro?'<span class="rintro">in intro</span>':''}</div>
+        <div class="rname">${esc(p.title)} ${p.featured?'<span class="rstar">★ lead</span>':''}${p.intro?'<span class="rintro">in intro</span>':''}${(p.docs||[]).length?`<span class="rintro">${p.docs.length} doc${p.docs.length>1?'s':''}${p.docConsent?'':' (hidden)'}</span>`:''}</div>
         <div class="rsub">${[esc(p.author),p.type?esc(p.type):'',p.year?esc(p.year):''].filter(Boolean).join(' · ')}${p.viewer?'':' · <span style="color:#B23A48">no link</span>'}${p.consent?'':' · <span style="color:var(--slate)">name hidden</span>'}</div>
       </div>
       <div class="racts">
@@ -833,12 +991,14 @@ function makeZip(entries){
 }
 
 /* export / import / reload */
-$('export-btn').onclick=()=>{
-  const { json, files }=extractPosters(DATA);
-  const entries=[{ name:`${CAT}/projects.json`, bytes:new TextEncoder().encode(JSON.stringify(json,null,2)) }, ...files.map(f=>({ name:f.repo, bytes:f.bytes }))];
+$('export-btn').onclick=async()=>{
+  const { json:j0, files }=extractPosters(DATA);
+  const { json, files:dfiles }=await extractDocs(j0);
+  const entries=[{ name:`${CAT}/projects.json`, bytes:new TextEncoder().encode(JSON.stringify(json,null,2)) }, ...files.map(f=>({ name:f.repo, bytes:f.bytes })), ...dfiles.map(f=>({ name:f.repo, bytes:f.bytes }))];
   const a=document.createElement('a'); a.href=URL.createObjectURL(makeZip(entries)); a.download=`${CAT}-update.zip`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   if(files.length) applyExtracted(files);
-  pub(`Exported ${CAT}-update.zip${files.length?` with ${files.length} new thumbnail${files.length===1?'':'s'}`:''}. Unzip it and drag everything inside into your repo's Upload files page.`,'ok');
+  if(dfiles.length) applyDocs(dfiles);
+  pub(`Exported ${CAT}-update.zip${files.length||dfiles.length?` with ${[files.length?files.length+' new thumbnail'+(files.length===1?'':'s'):'',dfiles.length?dfiles.length+' new document'+(dfiles.length===1?'':'s'):''].filter(Boolean).join(' and ')}`:''}. Unzip it and drag everything inside into your repo's Upload files page.`,'ok');
 };
 $('import-btn').onclick=()=>$('import-file').click();
 $('import-file').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d)){ DATA=d; save(); rebuildFilters(); render(); renderAdmin(); } else alert('That file isn\'t a projects list.'); }catch(err){ alert('Couldn\'t read that file as JSON.'); } }; r.readAsText(f); };
@@ -883,8 +1043,19 @@ $('publish-btn').onclick=async()=>{
       if(!fp.ok){ const e=await fp.json().catch(()=>({})); pub(`Thumbnail upload failed (${fp.status}): ${e.message||'check the token has write access'}`,'err'); return; }
     }
     if(files.length) applyExtracted(files);
+    // then documents (PDFs), into documents/<catalogue>/
+    const { json:jd, files:dfiles }=await extractDocs(json);
+    for(const f of dfiles){
+      pub(`Publishing document ${dfiles.indexOf(f)+1} of ${dfiles.length} (${fmtMB(f.bytes.length)})…`,'busy');
+      const fapi=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${(prefix+f.repo).split('/').map(encodeURIComponent).join('/')}`;
+      let fsha; const fr=await fetch(`${fapi}?ref=${encodeURIComponent(g.branch)}`,{headers}); if(fr.ok){ fsha=(await fr.json()).sha; }
+      const fb={ message:`Add document ${f.repo} via archive admin`, content:bytesToB64(f.bytes), branch:g.branch }; if(fsha) fb.sha=fsha;
+      const fp=await fetch(fapi,{method:'PUT',headers,body:JSON.stringify(fb)});
+      if(!fp.ok){ const e=await fp.json().catch(()=>({})); pub(`Document upload failed (${fp.status}): ${e.message||'the file may be too large; try a link instead'}`,'err'); return; }
+    }
+    if(dfiles.length) applyDocs(dfiles);
     pub('Publishing…','busy');
-    const body={ message:`Update ${g.path} via archive admin`, content:b64(JSON.stringify(json,null,2)), branch:g.branch };
+    const body={ message:`Update ${g.path} via archive admin`, content:b64(JSON.stringify(jd,null,2)), branch:g.branch };
     if(sha) body.sha=sha;
     const pr=await fetch(api,{method:'PUT',headers,body:JSON.stringify(body)});
     if(pr.ok){ pub('Published \u2713  The live site updates within a minute or two.','ok'); }
