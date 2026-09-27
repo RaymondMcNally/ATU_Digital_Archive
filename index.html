@@ -47,8 +47,14 @@
 
   /* strip */
   .strip{display:flex;justify-content:space-between;align-items:center;padding:22px 0 0}
-  .logo{display:inline-flex;align-items:center;height:34px}
-  .logo img{height:34px;width:auto;display:block}
+  .lockup{display:inline-flex;align-items:center;gap:18px}
+  .logo{display:inline-flex;align-items:center;height:68px}
+  .logo img{height:68px;width:auto;display:block}
+  .lock-rule{width:1px;align-self:stretch;margin:6px 0;background:var(--slate);opacity:.45}
+  .lock-text{display:flex;flex-direction:column;gap:2px;line-height:1.2}
+  .lock-text b{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:19px;letter-spacing:-.01em;color:var(--ink)}
+  .lock-text span{font-size:16px;color:var(--slate)}
+  @media (max-width:560px){ .lockup{gap:12px} .logo,.logo img{height:48px} .lock-text b{font-size:15px} .lock-text span{font-size:14px} }
   .logo-mark{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;letter-spacing:.14em;border:1.5px solid var(--ink);padding:6px 11px 5px;border-radius:3px}
   .theme{appearance:none;background:none;border:1px solid var(--hair);border-radius:999px;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:border-color .15s}
   .theme:hover{border-color:var(--slate)}
@@ -191,7 +197,11 @@
 
 <div class="sheet">
   <div class="strip">
-    <a class="logo" href="#" aria-label="ATU Sligo"><img id="logo-img" src="logo.svg" alt="ATU Sligo"></a>
+    <a class="lockup" href="#" aria-label="Atlantic Technological University Library, Design Archive home">
+      <span class="logo"><img id="logo-img" src="logo.svg" alt=""></span>
+      <span class="lock-rule" aria-hidden="true"></span>
+      <span class="lock-text"><b id="inst"></b><span id="sub"></span></span>
+    </a>
     <button class="theme" id="theme-btn" aria-label="Switch colour theme"></button>
   </div>
 </div>
@@ -199,7 +209,6 @@
 <header class="sheet">
   <div class="ix">
     <div>
-      <p class="eyebrow"><strong id="inst"></strong><br><span id="sub"></span></p>
       <h1 class="archive-title" id="title"></h1>
       <p class="lede" id="lede"></p>
       <div class="cat-head"><h2>Catalogues</h2><span id="cat-count"></span></div>
@@ -741,8 +750,8 @@ window.ATUSplat = (() => {
    ========================================================================== */
 const HUB = {
   title:"Design Archive",
-  institution:"ATU Sligo",
-  sub:"School of the Built Environment & Design",
+  institution:"Atlantic Technological University",
+  sub:"Library",
   lede:"A living collection of <b>3D-scanned exhibitions and student work</b>, captured as Gaussian splats you can orbit, zoom and walk through in the browser.",
   about1:"The archive documents design and art produced across the School — individual pieces and whole exhibitions alike — recorded as photographic 3D captures rather than flat photographs. Each catalogue gathers the work of one discipline.",
   about2:"Every scene is a 3D Gaussian splat in SOG format, hosted here at the library. It opens in any modern browser with no plugins or downloads — orbit with a drag, zoom with the wheel, and step inside where walk mode is enabled.",
