@@ -11,7 +11,10 @@
     "notes": "Strong parti: the courtyard reads as the organising void.",
     "consent": true,
     "xr": true,
-    "featured": false
+    "featured": false,
+    "intro": true,
+    "introUp": "-y",
+    "introTurn": 90
   },
   {
     "author": "Li Ling",
@@ -39,14 +42,17 @@
     "notes": "Year 1 Group Site Model",
     "consent": true,
     "xr": true,
-    "featured": false
+    "featured": false,
+    "intro": true,
+    "introUp": "-y",
+    "introTurn": 0
   },
   {
     "author": "MAGA",
     "title": "Student Housing",
     "type": "Sectional Model",
     "year": "2025/26",
-    "studio": "Studio 5 — Dwelling",
+    "studio": "Studio 5 — Student Housing",
     "viewer": "5th Year Student Housing.sog",
     "poster": "../posters/architecture/student-housing-maga.jpg",
     "caption": "Student Housing",
