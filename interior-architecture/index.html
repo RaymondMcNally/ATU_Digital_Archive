@@ -338,6 +338,7 @@
         <div class="field"><label>Teaching notes</label><textarea id="f-notes" placeholder="Shown in the viewer's Notes panel."></textarea></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-consent"> Show the student's full name publicly</label><p class="hint">Off = public pages show first name + initial only. The full name is always kept here for your records.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-xr"> Suitable for VR / XR viewing</label><p class="hint" id="xr-hint">Adds a VR badge and a headset symbol on the viewer. Leave off for large scenes that run poorly in a headset.</p></div>
+        <div class="field"><label for="f-bg">Viewer background</label><select id="f-bg"><option value="">Dark (default)</option><option value="white">White</option></select><p class="hint">The background a visitor sees first when they open this scan. They can still switch it in the viewer. Applies to .sog files in this catalogue, not superspl.at links.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-featured"> Feature as the lead plate</label></div>
         <div class="field">
           <label class="check"><input type="checkbox" id="f-intro"> Show in the home page intro</label>
@@ -371,6 +372,7 @@
   <div class="viewer-bar">
     <div><div class="v-title" id="v-title">—</div><div class="v-sub" id="v-sub"></div></div>
     <div class="v-actions">
+      <button class="v-btn" id="v-bg" aria-pressed="false" title="Switch the scene background between dark and white">White background</button>
       <button class="v-btn" id="v-info" aria-pressed="true">Notes</button>
       <button class="v-btn" id="v-close" aria-label="Close viewer">Close</button>
     </div>
@@ -407,13 +409,14 @@ const GITHUB = { owner:"", repo:"", branch:"main", path:"interior-architecture/p
    - a full http(s) URL (superspl.at or absolute) is used as-is
    - a scene file (.sog / .ply / .compressed.ply / .json) is wrapped in VIEWER_BASE
    - anything else (e.g. viewers/x/index.html) is treated as a ready viewer path */
-function resolveViewer(v){
+/* bg 'white' opens local scans with viewer/settings-white.json (white background) */
+function resolveViewer(v,bg){
   if(!v) return '';
   let s=v.trim();
   if(/^https?:\/\//i.test(s)) return s;                      // full URL (superspl.at / absolute) as-is
   if(/(\.sog|\.compressed\.ply|\.ply)$/i.test(s)){          // a scene file in ANY path form
     const name=s.split('/').pop();                            // -> use just the filename
-    return `${VIEWER_BASE}?content=${(MODELS_BASE+name).replace(/ /g,'%20')}${VIEWER_PARAMS}`;
+    return `${VIEWER_BASE}?content=${(MODELS_BASE+name).replace(/ /g,'%20')}${VIEWER_PARAMS}${bg==='white'?'&settings=settings-white.json':''}`;
   }
   return s;                                                    // an already-built viewer path (index.html)
 }
@@ -586,12 +589,29 @@ const viewer=$('viewer'), vStage=$('v-stage'), vRail=$('v-rail'), vInfoBtn=$('v-
 let infoOpen=true;
 function applyInfo(){ viewer.classList.toggle('info-open',infoOpen); vInfoBtn.setAttribute('aria-pressed',infoOpen); }
 vInfoBtn.onclick=()=>{ infoOpen=!infoOpen; applyInfo(); };
+/* background switch: only for scans hosted here (a superspl.at link keeps its own settings) */
+let vProject=null, vBg='dark';
+const vBgBtn=$('v-bg');
+const isLocalScan=v=>!!v && !/^https?:\/\//i.test(v.trim()) && /(\.sog|\.compressed\.ply|\.ply)$/i.test(v.trim());
+function syncBgBtn(){
+  const ok=vProject && isLocalScan(vProject.viewer);
+  vBgBtn.style.display=ok?'':'none';
+  vBgBtn.textContent=vBg==='white'?'Dark background':'White background';
+  vBgBtn.setAttribute('aria-pressed', vBg==='white');
+}
+vBgBtn.onclick=()=>{
+  if(!vProject) return;
+  vBg=vBg==='white'?'dark':'white'; syncBgBtn();
+  const f=vStage.querySelector('iframe'); if(f) f.src=resolveViewer(vProject.viewer,vBg);
+};
+
 function openViewer(p,trigger){
   lastFocused=trigger||document.activeElement;
   $('v-title').textContent=p.title;
   $('v-sub').textContent=[maskName(p.author,p.consent),p.type,p.year].filter(Boolean).join('  ·  ');
   vStage.innerHTML='';
-  if(p.viewer){ const f=document.createElement('iframe'); f.src=resolveViewer(p.viewer); f.allow='fullscreen; xr-spatial-tracking'; f.title=`${p.title} — 3D viewer`; vStage.appendChild(f); }
+  vProject=p; vBg=p.bg==='white'?'white':'dark'; syncBgBtn();
+  if(p.viewer){ const f=document.createElement('iframe'); f.src=resolveViewer(p.viewer,vBg); f.allow='fullscreen; xr-spatial-tracking'; f.title=`${p.title} — 3D viewer`; vStage.appendChild(f); }
   else vStage.innerHTML=`<div class="v-empty"><h3>This plate isn't linked to a viewer yet</h3><p>Open the admin, edit this project, and add its <code>superspl.at</code> scene link.</p></div>`;
   if(p.viewer && p.xr) vStage.insertAdjacentHTML('beforeend',`<div class="vr-flag" title="VR-ready — put on a WebXR headset and use the viewer's VR button">${VR_ICON}<span>VR ready</span></div>`);
   const meta=[['Type',p.type],['Year',p.year],['Studio',p.studio]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('');
@@ -649,7 +669,8 @@ async function checkSize(v){
     } else { xh.textContent=XR_HINT_BASE; xh.style.color=''; }
   }catch(e){ xh.textContent=XR_HINT_BASE; xh.style.color=''; }
 }
-vwr.addEventListener('input',()=>{ clearTimeout(peTimer); peTimer=setTimeout(()=>{ const u=resolveViewer(vwr.value.trim()); if(u){ pf.src=u; pe.classList.add('on'); } else { pe.classList.remove('on'); pf.src='about:blank'; } checkSize(vwr.value); },500); });
+$('f-bg').addEventListener('change',()=>{ const u=resolveViewer(vwr.value.trim(),$('f-bg').value); if(u){ pf.src=u; pe.classList.add('on'); } });
+vwr.addEventListener('input',()=>{ clearTimeout(peTimer); peTimer=setTimeout(()=>{ const u=resolveViewer(vwr.value.trim(),$('f-bg').value); if(u){ pf.src=u; pe.classList.add('on'); } else { pe.classList.remove('on'); pf.src='about:blank'; } checkSize(vwr.value); },500); });
 
 /* home page intro: this catalogue's models folder as seen from the site root */
 const ROOT_MODELS = MODELS_BASE.replace(/^(\.\.\/)+/, '');
@@ -680,7 +701,7 @@ $('proj-form').addEventListener('submit',e=>{
     type:$('f-type').value.trim(), year:$('f-year').value.trim(),
     studio:$('f-studio').value.trim(), viewer:vwr.value.trim(),
     poster:normPoster(pendingThumb), caption:$('f-caption').value.trim(),
-    notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked,
+    notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked, bg:$('f-bg').value||undefined,
     intro:$('f-intro').checked, introUp:$('f-intro-up').value, introTurn:Number($('f-intro-turn').value)
   };
   if(!p.author||!p.title){ return; }
@@ -701,11 +722,11 @@ function editProject(i){
   $('f-type').value=p.type||''; $('f-year').value=p.year||'';
   $('f-studio').value=p.studio||''; vwr.value=p.viewer||'';
   $('f-caption').value=p.caption||''; $('f-notes').value=p.notes||'';
-  $('f-featured').checked=!!p.featured; $('f-consent').checked=!!p.consent; $('f-xr').checked=!!p.xr; checkSize(p.viewer||'');
+  $('f-featured').checked=!!p.featured; $('f-consent').checked=!!p.consent; $('f-xr').checked=!!p.xr; $('f-bg').value=p.bg==='white'?'white':''; checkSize(p.viewer||'');
   $('f-intro').checked=!!p.intro; $('f-intro-up').value=p.introUp||'-y'; $('f-intro-turn').value=String(p.introTurn||0); syncIntroOpts();
   if(p.poster && !p.poster.startsWith('data:')){ thumbUrl.value=p.poster; } else thumbUrl.value='';
   setThumb(p.poster||'');
-  { const rv=resolveViewer(p.viewer||''); if(rv){ pf.src=rv; pe.classList.add('on'); } }
+  { const rv=resolveViewer(p.viewer||'',p.bg); if(rv){ pf.src=rv; pe.classList.add('on'); } }
   $('submit-btn').textContent='Save changes'; $('cancel-btn').style.display='inline-block';
   window.scrollTo({top:0,behavior:'smooth'});
 }
