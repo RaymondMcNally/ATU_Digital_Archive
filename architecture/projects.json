@@ -138,5 +138,22 @@
     "intro": true,
     "introUp": "-y",
     "introTurn": 0
+  },
+  {
+    "author": "CRUTH",
+    "title": "Sligo Harbour",
+    "type": "Site Context Model",
+    "year": "2026",
+    "studio": "Studio 3 - Site",
+    "viewer": "https://superspl.at/scene/cbb1644c",
+    "poster": "../posters/architecture/sligo-harbour-cruth.jpg",
+    "caption": "Sligo Docklands",
+    "notes": "",
+    "consent": true,
+    "xr": false,
+    "featured": false,
+    "intro": false,
+    "introUp": "-y",
+    "introTurn": 0
   }
 ]
