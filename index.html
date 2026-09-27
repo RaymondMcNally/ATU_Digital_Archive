@@ -55,31 +55,50 @@
   .theme svg{width:17px;height:17px}
 
   /* hero */
-  .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:40px 0 8px}
   .eyebrow{font-size:13.5px;color:var(--slate);line-height:1.5}
   .eyebrow strong{color:var(--ink);font-weight:500}
   .archive-title{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(44px,8vw,88px);letter-spacing:-.03em;line-height:.98;margin:18px 0 0}
   .lede{max-width:46ch;margin:24px 0 0;font-size:17px;line-height:1.62;color:var(--slate)}
   .lede b{color:var(--ink);font-weight:450}
-  .cloud-panel{position:relative;aspect-ratio:1/1;border:1px solid var(--hair);border-radius:6px;overflow:hidden;background:var(--paper-2);box-shadow:var(--shadow)}
-  #cloud{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .cloud-tag{position:absolute;left:16px;bottom:14px;font-size:11.5px;color:var(--slate);letter-spacing:.02em}
-
-  .rule{height:1px;background:var(--ink);margin:52px 0 0}
-
-  /* catalogues */
-  .cat-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:40px 0 24px}
+  .cat-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:44px 0 14px}
   .cat-head h2{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:22px;letter-spacing:-.01em;margin:0}
   .cat-head span{font-size:13.5px;color:var(--slate)}
-  .cats{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding-bottom:8px}
-  .cat{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:236px;padding:26px;border:1px solid var(--hair);border-radius:4px;background:var(--paper-2);overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s}
-  .cat:hover,.cat:focus-visible{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 10px 30px -18px rgba(23,25,26,.4);outline:none}
-  .cat .accent{position:absolute;top:0;left:0;right:0;height:3px;background:hsl(var(--h) 42% 46%)}
-  .cat .glyph{position:absolute;top:-24px;right:2px;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:190px;line-height:1;color:hsl(var(--h) 40% 45%);opacity:.06;pointer-events:none;user-select:none}
-  html[data-theme="dark"] .cat .glyph{opacity:.11}
-  .cat .cat-name{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:26px;letter-spacing:-.015em;line-height:1.08;margin:0;position:relative}
-  .cat .cat-desc{font-size:14.5px;color:var(--slate);margin:10px 0 0;max-width:34ch;position:relative}
-  .cat .enter{font-size:13.5px;color:var(--teal);margin-top:16px;position:relative;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+  /* hero: catalogue index on the left, live scan on the right */
+  .ix{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:clamp(32px,5vw,72px);align-items:start;padding:36px 0 8px}
+  .ix-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+  .ix-list li{border-bottom:1px solid var(--hair)}
+  .ix-list a{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:baseline;gap:12px;padding:18px 0 16px}
+  .ix-num{font-size:13px;color:var(--slate);font-variant-numeric:tabular-nums}
+  .ix-name{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(24px,2.7vw,36px);letter-spacing:-.025em;line-height:1.05;transition:transform .45s cubic-bezier(.16,1,.3,1),color .3s}
+  .ix-desc{display:block;font-family:"Inter",sans-serif;font-size:14px;letter-spacing:0;font-weight:400;color:var(--slate);margin-top:6px}
+  .ix-count{font-size:13.5px;color:var(--slate);white-space:nowrap;display:flex;gap:10px;align-items:center}
+  .ix-count i{font-style:normal;color:var(--teal);opacity:0;transform:translateX(-6px);transition:.35s}
+  .ix-list li.on .ix-name,.ix-list a:focus-visible .ix-name{transform:translateX(10px);color:var(--teal)}
+  .ix-list li.on .ix-count i{opacity:1;transform:none}
+  .ix-list a:focus-visible{outline:none}
+  .ix-view{position:sticky;top:18px}
+  .ix-stage{position:relative;height:min(70vh,640px);min-height:360px;border-radius:6px;overflow:hidden;background:#0E1112;color:#ECEDEC}
+  .ix-stage > *{position:absolute;inset:0}
+  .ix-poster{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease}
+  .ix-poster.on{opacity:1}
+  #ix-gl{width:100%;height:100%;display:block;opacity:0;transition:opacity .9s ease;touch-action:pan-y;cursor:grab}
+  #ix-gl.on{opacity:1}
+  #ix-gl:active{cursor:grabbing}
+  .ix-empty{display:grid;place-items:center;text-align:center;padding:32px;opacity:0;transition:opacity .5s;pointer-events:none}
+  .ix-empty.on{opacity:1}
+  .ix-empty b{display:block;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:22px;letter-spacing:-.01em;color:#ECEDEC}
+  .ix-empty span{display:block;margin-top:8px;font-size:14px;color:#9FA7A6;max-width:32ch}
+  .ix-tag{inset:auto auto 14px 16px!important;font-size:12px;color:#B9C0BF;letter-spacing:.02em;pointer-events:none;transition:opacity .4s}
+  .ix-tag b{color:#8FC5BE;font-weight:500}
+  .ix-cap{display:flex;justify-content:space-between;gap:16px;margin-top:12px;font-size:13.5px;color:var(--slate);min-height:22px}
+  .ix-cap b{color:var(--ink);font-weight:500}
+  .ix-cap a{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+  .rule{height:1px;background:var(--hair);margin:56px 0 0}
+  @media (max-width:820px){
+    .ix{grid-template-columns:1fr;gap:26px;padding-top:26px}
+    .ix-view{position:relative;top:0;order:-1}
+    .ix-stage{height:56vh;min-height:300px}
+  }
 
   /* about */
   .about{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin:64px 0 0;padding-top:36px;border-top:1px solid var(--hair)}
@@ -91,9 +110,6 @@
   footer .sheet{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
   @media (max-width:820px){
-    .hero{grid-template-columns:1fr;gap:30px;padding-top:30px}
-    .cloud-panel{aspect-ratio:16/10;order:-1}
-    .cats{grid-template-columns:1fr}
     .about{grid-template-columns:1fr;gap:26px}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -181,23 +197,29 @@
 </div>
 
 <header class="sheet">
-  <div class="hero">
+  <div class="ix">
     <div>
       <p class="eyebrow"><strong id="inst"></strong><br><span id="sub"></span></p>
       <h1 class="archive-title" id="title"></h1>
       <p class="lede" id="lede"></p>
+      <div class="cat-head"><h2>Catalogues</h2><span id="cat-count"></span></div>
+      <ol class="ix-list" id="cats"></ol>
     </div>
-    <div class="cloud-panel">
-      <canvas id="cloud"></canvas>
-      <span class="cloud-tag">ATU · live point cloud</span>
+    <div class="ix-view">
+      <div class="ix-stage" id="ix-stage">
+        <img class="ix-poster" alt="">
+        <img class="ix-poster" alt="">
+        <canvas id="ix-gl" aria-label="Live 3D scan of the featured work"></canvas>
+        <div class="ix-empty"><div><b></b><span></span></div></div>
+        <p class="ix-tag"><b>Live scan</b>&ensp;drag to turn</p>
+      </div>
+      <p class="ix-cap"><span id="ix-cap-l"></span><span id="ix-cap-r"></span></p>
     </div>
   </div>
 </header>
 
 <main class="sheet">
   <div class="rule"></div>
-  <div class="cat-head"><h2>Catalogues</h2><span id="cat-count"></span></div>
-  <div class="cats" id="cats"></div>
 
   <section class="about">
     <div>
@@ -209,6 +231,326 @@
       <p id="about-2"></p>
     </div>
   </section>
+<!-- ==========================================================================
+     WHAT IS A GAUSSIAN SPLAT — text plus a live explainer that starts on one
+     splat of a real scan and pulls back until the whole model appears.
+     The scene is drawn as true Gaussian splats (stretched, rotated ellipses),
+     read straight from the .sog file named in data-src.
+     ========================================================================== -->
+<style>
+  .gs{margin:64px 0 0;padding-top:36px;border-top:1px solid var(--hair)}
+  .gs-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;align-items:start}
+  .gs h3{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:19px;margin:0 0 12px}
+  .gs p{margin:0;color:var(--slate);font-size:15.5px;line-height:1.66;max-width:52ch}
+  .gs p + p{margin-top:14px}
+  .gs-stage{position:relative;margin-top:32px;height:min(64vh,600px);min-height:380px;background:#0E1112;border-radius:4px;overflow:hidden;color:#ECEDEC}
+  .gs-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  .gs-stage canvas:active{cursor:grabbing}
+  .gs-cap{position:absolute;left:24px;bottom:78px;max-width:min(440px,calc(100% - 48px));pointer-events:none}
+  .gs-cap .k{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8FC5BE;margin-bottom:6px;font-variant-numeric:tabular-nums}
+  .gs-cap .t{display:block;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(20px,2.4vw,28px);letter-spacing:-.015em;line-height:1.15}
+  .gs-cap .d{display:block;margin-top:8px;font-size:14.5px;line-height:1.55;color:#B9C0BF;max-width:44ch}
+  .gs-cap > *{transition:opacity .35s}
+  .gs-cap.swap > *{opacity:0}
+  .gs-bar{position:absolute;left:24px;right:24px;bottom:22px;display:flex;align-items:center;gap:14px}
+  .gs-bar button{appearance:none;border:1px solid rgba(236,237,236,.35);background:rgba(14,17,18,.6);color:#ECEDEC;font:inherit;font-size:13px;padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+  .gs-bar button:hover{border-color:#ECEDEC}
+  .gs-bar button:focus-visible,.gs-bar input:focus-visible{outline:2px solid #8FC5BE;outline-offset:2px}
+  .gs-bar input{flex:1;accent-color:#8FC5BE;min-width:80px}
+  .gs-count{font-size:12.5px;color:#B9C0BF;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .gs-load{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;color:#B9C0BF}
+  .gs-note{margin-top:10px;font-size:13px;color:var(--slate)}
+  @media (max-width:760px){ .gs-head{grid-template-columns:1fr;gap:18px} .gs-count{display:none} .gs-cap{bottom:70px;left:16px} .gs-bar{left:16px;right:16px} }
+</style>
+
+<section class="gs" id="what-is-a-splat" aria-labelledby="gs-title">
+  <div class="gs-head">
+    <div>
+      <h3 id="gs-title">What is a Gaussian splat?</h3>
+      <p>Every model in this archive is a Gaussian splat, a way of recording real objects and spaces in 3D from ordinary photographs or video.</p>
+      <p>Instead of building a model from flat surfaces and textures, as traditional 3D software does, a Gaussian splat describes a scene as a cloud of tiny, soft, semi-transparent blobs of colour. Each blob, or &ldquo;splat&rdquo;, has its own position, size, shape, orientation and transparency. On their own they look like fuzzy specks. Viewed together, tens of thousands of them blend into a continuous, photographic image that holds together as you move around it.</p>
+    </div>
+    <div>
+      <p>The splats are calculated by software that compares many images of the same subject taken from different angles, and adjusts every splat until the 3D scene matches what the camera saw. Because the method works directly from photographs, it captures qualities that are hard to model by hand, such as the grain of card and timber, the fuzz of model trees, soft shadows and the way light falls across a surface.</p>
+      <p>The result is a record of the object as it looked on the day it was captured, not a CAD drawing. It shows what a model looks like rather than precise measurements, and very shiny or transparent materials such as glass and acrylic can appear blurred. The scenes here are stored in SOG, a compressed format that keeps most models to around a megabyte.</p>
+    </div>
+  </div>
+  <div class="gs-stage" data-src="models/architecture/Sligo Train Station Model.sog" data-up="-y" data-turn="270">
+    <canvas aria-label="Animation zooming out from a single Gaussian splat to a full scan of the Sligo Transportation Hub model"></canvas>
+    <div class="gs-load">Loading the scan&hellip;</div>
+    <div class="gs-cap" aria-live="polite"><span class="k"></span><span class="t"></span><span class="d"></span></div>
+    <div class="gs-bar">
+      <button type="button" data-play>Pause</button>
+      <input type="range" min="0" max="1000" value="0" aria-label="Scrub through the animation">
+      <span class="gs-count"></span>
+    </div>
+  </div>
+  <p class="gs-note">Scan: Sligo Transportation Hub, Li Ling, Studio 5, 2025/26. Drag to turn the model once the animation finishes.</p>
+</section>
+
+<script type="module">
+const stage = document.querySelector('.gs-stage');
+if (stage){
+  const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)){ io.disconnect(); startExplainer(stage).catch(e => { console.error(e); stage.querySelector('.gs-load').textContent = 'The 3D scan could not be loaded in this browser.'; }); } }, { rootMargin:'200px' });
+  io.observe(stage);
+}
+
+async function startExplainer(stage){
+  const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js');
+  const canvas = stage.querySelector('canvas'), loadEl = stage.querySelector('.gs-load'), cap = stage.querySelector('.gs-cap');
+  const range = stage.querySelector('input'), playBtn = stage.querySelector('[data-play]'), countEl = stage.querySelector('.gs-count');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75)); renderer.setClearColor(0x0E1112, 1);
+
+  /* ---------- load and decode the scan ---------- */
+  let bytes;
+  const src = stage.dataset.src;
+  if (window.__SPLAT_EXPLAINER_B64){ const b = atob(window.__SPLAT_EXPLAINER_B64); bytes = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i); }
+  else { const r = await fetch(encodeURI(src)); if (!r.ok) throw new Error('fetch ' + r.status); bytes = new Uint8Array(await r.arrayBuffer()); }
+  const S = await readSOGFull(bytes, renderer);
+  const N = S.count;
+
+  // stand the model up and face it forward, then fit it to a unit box resting on y = 0
+  const R = orient(stage.dataset.up || '-y', Number(stage.dataset.turn) || 0);
+  const pos = new Float32Array(N * 3), cov = new Float32Array(N * 6);
+  for (let i = 0; i < N; i++){
+    const x = S.pos[i*3], y = S.pos[i*3+1], z = S.pos[i*3+2];
+    for (let a = 0; a < 3; a++) pos[i*3+a] = R[a*3] * x + R[a*3+1] * y + R[a*3+2] * z;
+  }
+  const pct = (a, f) => { const v = []; for (let i = 0; i < N; i += 5) v.push(pos[i*3+a]); v.sort((p, q) => p - q); return v[Math.floor(f * (v.length - 1))]; };
+  const lo = [0,1,2].map(a => pct(a, .005)), hi = [0,1,2].map(a => pct(a, .995));
+  const k = 1 / Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
+  const ctr = [(lo[0] + hi[0]) / 2, lo[1], (lo[2] + hi[2]) / 2];
+  const maxSig = new Float32Array(N), ratio = new Float32Array(N), flat = new Float32Array(N), normal = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++){
+    for (let a = 0; a < 3; a++) pos[i*3+a] = (pos[i*3+a] - ctr[a]) * k;
+    // covariance = M R S S R^T M^T, scaled by k^2
+    const [w, qx, qy, qz] = [S.rot[i*4], S.rot[i*4+1], S.rot[i*4+2], S.rot[i*4+3]];
+    const r = [1 - 2*(qy*qy + qz*qz), 2*(qx*qy - w*qz), 2*(qx*qz + w*qy),
+               2*(qx*qy + w*qz), 1 - 2*(qx*qx + qz*qz), 2*(qy*qz - w*qx),
+               2*(qx*qz - w*qy), 2*(qy*qz + w*qx), 1 - 2*(qx*qx + qy*qy)];
+    const sx = S.scl[i*3] * k, sy = S.scl[i*3+1] * k, sz = S.scl[i*3+2] * k;
+    const m = new Array(9);                                  // M = R_orient * R_splat * S
+    for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++){
+      const rr = R[a*3] * r[b] + R[a*3+1] * r[3+b] + R[a*3+2] * r[6+b];
+      m[a*3+b] = rr * [sx, sy, sz][b];
+    }
+    const c = (a, b) => m[a*3] * m[b*3] + m[a*3+1] * m[b*3+1] + m[a*3+2] * m[b*3+2];
+    cov.set([c(0,0), c(0,1), c(0,2), c(1,1), c(1,2), c(2,2)], i*6);
+    const ss = [sx, sy, sz].sort((p, q) => q - p); maxSig[i] = ss[0]; ratio[i] = ss[0] / Math.max(1e-9, ss[1]); flat[i] = ss[1] / Math.max(1e-9, ss[2]);
+    const sm = [sx, sy, sz].indexOf(ss[2]);                  // thinnest axis = the splat's facing direction
+    for (let a = 0; a < 3; a++) normal[i*3+a] = m[a*3+sm] / Math.max(1e-12, [sx, sy, sz][sm]);
+  }
+
+  // the splat we start on: opaque, clearly stretched, mid-sized, on the front of the model
+  let zs = []; for (let i = 0; i < N; i += 3) zs.push(pos[i*3+2]); zs.sort((p, q) => p - q); const zFront = zs[Math.floor(zs.length * .8)];
+  const cand = [];
+  for (let i = 0; i < N; i++){ const x = pos[i*3], y = pos[i*3+1], z = pos[i*3+2];
+    const lum = S.col[i*4] * .3 + S.col[i*4+1] * .59 + S.col[i*4+2] * .11;
+    if (S.col[i*4+3] > .85 && lum > .35 && ratio[i] > 1.3 && ratio[i] < 2.6 && flat[i] > 3 && Math.abs(x) < .35 && y > .06 && y < .5 && z > zFront) cand.push(i); }
+  cand.sort((a, b) => maxSig[a] - maxSig[b]);
+  const band = cand.slice(Math.floor(cand.length * .75), Math.floor(cand.length * .95));
+  let focal = band.length ? band[Math.floor(band.length / 2)] : (cand[0] || 0);
+  const F = new THREE.Vector3(pos[focal*3], pos[focal*3+1], pos[focal*3+2]);
+
+  /* ---------- data textures: one texel per splat ---------- */
+  const TW = 1024, TH = Math.ceil(N / TW);
+  const tex = (arr) => { const t = new THREE.DataTexture(arr, TW, TH, THREE.RGBAFormat, THREE.FloatType); t.needsUpdate = true; return t; };
+  const tC = new Float32Array(TW * TH * 4), tK = new Float32Array(TW * TH * 4), tA = new Float32Array(TW * TH * 4), tB = new Float32Array(TW * TH * 4);
+  for (let i = 0; i < N; i++){
+    const dx = pos[i*3] - F.x, dy = pos[i*3+1] - F.y, dz = pos[i*3+2] - F.z;
+    tC.set([pos[i*3], pos[i*3+1], pos[i*3+2], i === focal ? -1 : Math.sqrt(dx*dx + dy*dy + dz*dz)], i*4);
+    tK.set([S.col[i*4], S.col[i*4+1], S.col[i*4+2], S.col[i*4+3]], i*4);
+    tA.set([cov[i*6], cov[i*6+1], cov[i*6+2], 0], i*4);
+    tB.set([cov[i*6+3], cov[i*6+4], cov[i*6+5], 0], i*4);
+  }
+  const geo = new THREE.InstancedBufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-2,-2,0, 2,-2,0, 2,2,0, -2,2,0]), 3));
+  geo.setIndex([0,1,2, 0,2,3]);
+  const order = new Float32Array(N); for (let i = 0; i < N; i++) order[i] = i;
+  const orderAttr = new THREE.InstancedBufferAttribute(order, 1); orderAttr.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('iIndex', orderAttr); geo.instanceCount = N;
+
+  const U = { tC:{value:tex(tC)}, tK:{value:tex(tK)}, tA:{value:tex(tA)}, tB:{value:tex(tB)},
+              uView:{value:new THREE.Vector2(1, 1)}, uShrink:{value:1}, uReveal:{value:0}, uSoft:{value:0} };
+  const mat = new THREE.ShaderMaterial({ glslVersion:THREE.GLSL3, uniforms:U, transparent:true, depthTest:false, depthWrite:false, side:THREE.DoubleSide,
+    blending:THREE.CustomBlending, blendSrc:THREE.OneFactor, blendDst:THREE.OneMinusSrcAlphaFactor,
+    vertexShader:`
+      precision highp float; precision highp sampler2D;
+      in float iIndex; uniform sampler2D tC, tK, tA, tB; uniform vec2 uView; uniform float uShrink, uReveal, uSoft;
+      out vec4 vCol; out vec2 vPos; out float vFocal;
+      void main(){
+        int id = int(iIndex); ivec2 uv = ivec2(id % ${TW}, id / ${TW});
+        vec4 c = texelFetch(tC, uv, 0), col = texelFetch(tK, uv, 0);
+        // reveal: splats appear outward from the focal splat as the camera pulls back
+        float vis = c.w < 0. ? 1. : 1. - smoothstep(uReveal * .75, uReveal, c.w);
+        vec4 cam = modelViewMatrix * vec4(c.xyz, 1.);
+        vec4 clip = projectionMatrix * cam;
+        if (vis < .003 || cam.z > -1e-4){ gl_Position = vec4(0., 0., 2., 1.); return; }
+        vec4 a = texelFetch(tA, uv, 0), b = texelFetch(tB, uv, 0);
+        mat3 V = mat3(a.x, a.y, a.z, a.y, b.x, b.y, a.z, b.y, b.z) * (uShrink * uShrink);
+        float zp = -cam.z, fx = projectionMatrix[0][0] * uView.x * .5, fy = projectionMatrix[1][1] * uView.y * .5;
+        mat3 J = mat3(fx / zp, 0., 0., 0., fy / zp, 0., fx * cam.x / (zp*zp), fy * cam.y / (zp*zp), 0.);
+        mat3 T = J * mat3(modelViewMatrix);
+        mat3 c2 = T * V * transpose(T);
+        float xx = c2[0][0] + .3, yy = c2[1][1] + .3, xy = c2[0][1];
+        float mid = .5 * (xx + yy), rad = length(vec2(.5 * (xx - yy), xy));
+        float l1 = mid + rad, l2 = max(mid - rad, .1);
+        vec2 dir = normalize(vec2(xy, l1 - xx) + vec2(1e-6, 0.));
+        vec2 major = min(sqrt(2. * l1), 2048.) * dir, minor = min(sqrt(2. * l2), 2048.) * vec2(dir.y, -dir.x);
+        vPos = position.xy; vFocal = c.w < 0. ? 1. : 0.;
+        vCol = vec4(col.rgb, col.a * vis);
+        gl_Position = vec4(clip.xy / clip.w + (position.x * major + position.y * minor) * 2. / uView, 0., 1.);
+      }`,
+    fragmentShader:`
+      precision highp float; in vec4 vCol; in vec2 vPos; in float vFocal; out vec4 outColor; uniform float uSoft;
+      void main(){
+        float A = -dot(vPos, vPos); if (A < -4.) discard;
+        float B = exp(A) * vCol.a;
+        // a faint outline on the lone splat so its edge reads against the dark
+        float ring = vFocal * uSoft * smoothstep(.06, 0., abs(sqrt(-A) - 1.7)) * .5;
+        outColor = vec4(vCol.rgb * B + vec3(ring * .56, ring * .77, ring * .75), B + ring * .5);
+      }` });
+  const scene = new THREE.Scene(), mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; scene.add(mesh);
+  const camera = new THREE.PerspectiveCamera(40, 1, 1e-4, 50);
+
+  /* ---------- back-to-front sort of instance order ---------- */
+  const dep = new Float32Array(N), keys = new Uint16Array(N), counts = new Uint32Array(65536);
+  function sort(){
+    const e = camera.matrixWorldInverse.elements;
+    let mn = Infinity, mx = -Infinity;
+    for (let i = 0; i < N; i++){ const d = e[2] * pos[i*3] + e[6] * pos[i*3+1] + e[10] * pos[i*3+2] + e[14]; dep[i] = d; if (d < mn) mn = d; if (d > mx) mx = d; }
+    const s = 65535 / Math.max(1e-9, mx - mn); counts.fill(0);
+    for (let i = 0; i < N; i++){ const kk = (dep[i] - mn) * s | 0; keys[i] = kk; counts[kk]++; }   // most negative z (far) first
+    for (let i = 1; i < 65536; i++) counts[i] += counts[i-1];
+    for (let i = N - 1; i >= 0; i--) order[--counts[keys[i]]] = i;
+    orderAttr.needsUpdate = true;
+  }
+
+  function resize(){
+    const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    U.uView.value.set(renderer.domElement.width, renderer.domElement.height);
+  }
+  const ro = new ResizeObserver(resize); ro.observe(stage); resize();
+  loadEl.remove();
+
+  /* ---------- the story ---------- */
+  const fmt = n => n.toLocaleString('en-IE');
+  const STEPS = [
+    { at:0,    k:'01  One splat',        t:'A single soft blob of colour',             d:'Each splat has a position, a size and shape, a rotation, a colour and a transparency. This one sits on the front wall of the model.' },
+    { at:3.2,  k:'02  A few hundred',    t:'Shrunk here so you can see each one',     d:'Splats are stretched and turned to follow the surface they describe. On their own they look like scattered specks.' },
+    { at:8.4,  k:'03  Thousands',        t:'At full size they overlap and blend',     d:'Layered and partly transparent, neighbouring splats merge into continuous surfaces, edges and shadows.' },
+    { at:11.6, k:'04  ' + fmt(N) + ' splats', t:'The complete scan',                  d:'Every splat together makes the model you can turn, zoom and walk around. Drag to turn it.' }
+  ];
+  const END = 13.2, ease = x => x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2, clamp = x => Math.min(1, Math.max(0, x));
+  const sig0 = maxSig[focal] * 1;
+  const dClose = Math.max(sig0 * 11, .004), dFar = 2.35, CTR = new THREE.Vector3(0, .42, 0);
+  const view0 = new THREE.Vector3(.25, .12, 1).normalize();
+  const face = new THREE.Vector3(normal[focal*3], normal[focal*3+1], normal[focal*3+2]).normalize(); if (face.dot(view0) < 0) face.negate();   // start square-on to the splat
+
+  let t = reduce ? END : 0, playing = !reduce, last = performance.now(), step = -1, rotY = 0, elev = 0, drag = null, userMoved = false, frame = 0;
+  function showStep(i){
+    if (i === step) return; step = i; const s = STEPS[i];
+    cap.classList.add('swap');
+    setTimeout(() => { cap.querySelector('.k').textContent = s.k; cap.querySelector('.t').textContent = s.t; cap.querySelector('.d').textContent = s.d; cap.classList.remove('swap'); }, step === 0 && !cap.textContent.trim() ? 0 : 280);
+  }
+  playBtn.onclick = () => { if (t >= END){ t = 0; userMoved = false; rotY = 0; elev = 0; } playing = !playing; };
+  range.oninput = () => { t = range.value / 1000 * END; playing = false; };
+  canvas.addEventListener('pointerdown', e => { drag = { x:e.clientX, y:e.clientY, r:rotY, e:elev }; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', e => { if (!drag) return; userMoved = true; rotY = drag.r + (e.clientX - drag.x) * .007; elev = Math.min(.9, Math.max(-.3, drag.e + (e.clientY - drag.y) * .005)); });
+  const up = () => drag = null; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+
+  const tgt = new THREE.Vector3(), dirv = new THREE.Vector3(), camPos = new THREE.Vector3();
+  let raf, visible = true;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(stage);
+  function tick(now){
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (!visible) return;
+    if (playing){ t = Math.min(END + 60, t + dt); if (t >= END && !userMoved) rotY += dt * .12; }
+    range.value = Math.round(Math.min(1, t / END) * 1000);
+    playBtn.textContent = t >= END ? 'Replay' : playing ? 'Pause' : 'Play';
+    showStep(t < STEPS[1].at ? 0 : t < STEPS[2].at ? 1 : t < STEPS[3].at ? 2 : 3);
+
+    // zoom: stay on the lone splat, then pull back exponentially to the whole model
+    const z = ease(clamp((t - 2.2) / 9.4));
+    const d = dClose * Math.pow(dFar / dClose, z);
+    tgt.copy(F).lerp(CTR, ease(clamp((t - 5.5) / 6.3)));
+    dirv.copy(face).lerp(view0, ease(clamp((t - 2.6) / 6))).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY + Math.sin(t * .25) * .06 * (1 - z));
+    dirv.y += elev; dirv.normalize();
+    camPos.copy(tgt).addScaledVector(dirv, d);
+    camera.position.copy(camPos); camera.lookAt(tgt); camera.updateMatrixWorld();
+
+    U.uReveal.value = t >= 11 ? 99 : d * .4 * clamp((t - 2.4) / .8) + Math.pow(clamp((t - 9) / 2), 3) * 3;   // nothing but the one splat until 2.4 s
+    U.uShrink.value = 1 - .7 * (ease(clamp((t - 2.4) / 1.6)) - ease(clamp((t - 8.2) / 2.2)));
+    U.uSoft.value = 1 - clamp((t - 2.6) / 1);
+    const shown = t >= 11 ? N : null;
+    countEl.textContent = shown ? fmt(N) + ' splats' : step === 0 ? '1 splat' : '';
+
+    if (frame++ % 2 === 0) sort();
+    renderer.render(scene, camera);
+  }
+  raf = requestAnimationFrame(tick);
+}
+
+/* stand the scan upright: up axis to +Y, then spin about vertical (row-major 3x3) */
+function orient(up, turn){
+  const Um = { '-y':[1,0,0, 0,-1,0, 0,0,-1], '+y':[1,0,0, 0,1,0, 0,0,1], '+z':[1,0,0, 0,0,1, 0,-1,0], '-z':[1,0,0, 0,0,-1, 0,1,0] }[up] || [1,0,0, 0,-1,0, 0,0,-1];
+  const a = turn * Math.PI / 180, c = Math.round(Math.cos(a) * 1e6) / 1e6, s = Math.round(Math.sin(a) * 1e6) / 1e6;
+  const T = [c,0,s, 0,1,0, -s,0,c], M = [];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) M[i*3+j] = T[i*3] * Um[j] + T[i*3+1] * Um[3+j] + T[i*3+2] * Um[6+j];
+  return M;
+}
+
+/* SOG v2 reader with rotations and scales (webp decoded through WebGL so values stay exact) */
+async function readSOGFull(u8, renderer){
+  const files = {}, dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  let e = u8.length - 22; while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  let p = dv.getUint32(e + 16, true);
+  for (let i = 0, n = dv.getUint16(e + 10, true); i < n; i++){
+    const method = dv.getUint16(p + 10, true), size = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl)), data = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true);
+    let body = u8.subarray(data, data + size);
+    if (method === 8) body = new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    files[name] = body; p += 46 + nl + xl + cl;
+  }
+  const meta = JSON.parse(new TextDecoder().decode(files['meta.json']));
+  if (meta.version !== 2) throw new Error('SOG version');
+  const gl = renderer.getContext();
+  const px = async name => {
+    const bmp = await createImageBitmap(new Blob([files[name]], { type:'image/webp' }), { premultiplyAlpha:'none', colorSpaceConversion:'none' });
+    const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
+    const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+    const out = new Uint8Array(bmp.width * bmp.height * 4); gl.readPixels(0, 0, bmp.width, bmp.height, gl.RGBA, gl.UNSIGNED_BYTE, out);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteFramebuffer(fb); gl.deleteTexture(tx); bmp.close(); renderer.resetState();
+    return out;
+  };
+  const n = meta.count, { mins, maxs } = meta.means;
+  const ml = await px(meta.means.files[0]), mu = await px(meta.means.files[1]), sh = await px(meta.sh0.files[0]), sc = await px(meta.scales.files[0]), qt = await px(meta.quats.files[0]);
+  const cb = meta.sh0.codebook, scb = meta.scales.codebook, C0 = 0.28209479177387814, QI = [1,2,3, 0,2,3, 0,1,3, 0,1,2];
+  const pos = new Float32Array(n*3), col = new Float32Array(n*4), rot = new Float32Array(n*4), scl = new Float32Array(n*3);
+  for (let i = 0; i < n; i++){
+    for (let a = 0; a < 3; a++){
+      const v = mins[a] + (maxs[a] - mins[a]) * (((mu[i*4+a] << 8) | ml[i*4+a]) / 65535);
+      pos[i*3+a] = Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
+      col[i*4+a] = Math.min(1, Math.max(0, .5 + C0 * cb[sh[i*4+a]]));
+      scl[i*3+a] = Math.exp(scb[sc[i*4+a]]);
+    }
+    col[i*4+3] = sh[i*4+3] / 255;
+    const m = qt[i*4+3] - 252, q = [0,0,0,0];
+    const A = (qt[i*4] / 255 * 2 - 1) / Math.SQRT2, B = (qt[i*4+1] / 255 * 2 - 1) / Math.SQRT2, Cc = (qt[i*4+2] / 255 * 2 - 1) / Math.SQRT2;
+    if (m >= 0 && m <= 3){ q[QI[m*3]] = A; q[QI[m*3+1]] = B; q[QI[m*3+2]] = Cc; q[m] = Math.sqrt(Math.max(0, 1 - A*A - B*B - Cc*Cc)); } else q[0] = 1;
+    rot.set(q, i*4);                                        // [w, x, y, z]
+  }
+  return { count:n, pos, col, rot, scl };
+}
+</script>
+
 </main>
 
 <footer>
@@ -217,6 +559,181 @@
     <span>3D Gaussian Splatting · SOG</span>
   </div>
 </footer>
+
+<!-- ==========================================================================
+     SPLAT KIT — shared by the home page scan viewer and the intro.
+     Reads a .sog file (with rotations and scales) and draws it as true
+     Gaussian splats: stretched, rotated, soft ellipses, sorted back to front.
+     window.ATUSplat = { readSOG, orient, bounds, prepare, createMesh }
+     ========================================================================== -->
+<script>
+window.ATUSplat = (() => {
+  async function unzip(u8){
+    const files = {}, dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    let e = u8.length - 22; while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) return files;
+    let p = dv.getUint32(e + 16, true);
+    for (let i = 0, n = dv.getUint16(e + 10, true); i < n; i++){
+      const method = dv.getUint16(p + 10, true), size = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl)), data = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true);
+      let body = u8.subarray(data, data + size);
+      if (method === 8) body = new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+      files[name] = body; p += 46 + nl + xl + cl;
+    }
+    return files;
+  }
+
+  /* SOG v2 -> { count, pos xyz, col rgba (a = opacity), rot wxyz, scl xyz }.
+     WebP images go through WebGL so indices and opacity stay exact. */
+  async function readSOG(u8, renderer){
+    const files = await unzip(u8);
+    if (!files['meta.json']) return null;
+    const meta = JSON.parse(new TextDecoder().decode(files['meta.json']));
+    if (meta.version !== 2) return null;
+    const gl = renderer.getContext();
+    const px = async name => {
+      const bmp = await createImageBitmap(new Blob([files[name]], { type:'image/webp' }), { premultiplyAlpha:'none', colorSpaceConversion:'none' });
+      const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
+      const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+      const out = new Uint8Array(bmp.width * bmp.height * 4); gl.readPixels(0, 0, bmp.width, bmp.height, gl.RGBA, gl.UNSIGNED_BYTE, out);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteFramebuffer(fb); gl.deleteTexture(tx); bmp.close(); renderer.resetState();
+      return out;
+    };
+    const n = meta.count, { mins, maxs } = meta.means;
+    const ml = await px(meta.means.files[0]), mu = await px(meta.means.files[1]), sh = await px(meta.sh0.files[0]), sc = await px(meta.scales.files[0]), qt = await px(meta.quats.files[0]);
+    const cb = meta.sh0.codebook, scb = meta.scales.codebook, C0 = 0.28209479177387814, QI = [1,2,3, 0,2,3, 0,1,3, 0,1,2];
+    const pos = new Float32Array(n*3), col = new Float32Array(n*4), rot = new Float32Array(n*4), scl = new Float32Array(n*3);
+    for (let i = 0; i < n; i++){
+      for (let a = 0; a < 3; a++){
+        const v = mins[a] + (maxs[a] - mins[a]) * (((mu[i*4+a] << 8) | ml[i*4+a]) / 65535);
+        pos[i*3+a] = Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
+        col[i*4+a] = Math.min(1, Math.max(0, .5 + C0 * cb[sh[i*4+a]]));
+        scl[i*3+a] = Math.exp(scb[sc[i*4+a]]);
+      }
+      col[i*4+3] = sh[i*4+3] / 255;
+      const m = qt[i*4+3] - 252, A = (qt[i*4] / 255 * 2 - 1) / Math.SQRT2, B = (qt[i*4+1] / 255 * 2 - 1) / Math.SQRT2, C = (qt[i*4+2] / 255 * 2 - 1) / Math.SQRT2;
+      if (m >= 0 && m <= 3){ rot[i*4 + QI[m*3]] = A; rot[i*4 + QI[m*3+1]] = B; rot[i*4 + QI[m*3+2]] = C; rot[i*4 + m] = Math.sqrt(Math.max(0, 1 - A*A - B*B - C*C)); }
+      else rot[i*4] = 1;
+    }
+    return { count:n, pos, col, rot, scl };
+  }
+
+  /* stand the scan upright (its up axis to +Y), then spin it about vertical; row-major 3x3 */
+  function orient(up, turn){
+    const U = { '-y':[1,0,0, 0,-1,0, 0,0,-1], '+y':[1,0,0, 0,1,0, 0,0,1], '+z':[1,0,0, 0,0,1, 0,-1,0], '-z':[1,0,0, 0,0,-1, 0,1,0] }[up] || [1,0,0, 0,-1,0, 0,0,-1];
+    const a = (Number(turn) || 0) * Math.PI / 180, c = Math.round(Math.cos(a) * 1e6) / 1e6, s = Math.round(Math.sin(a) * 1e6) / 1e6;
+    const T = [c,0,s, 0,1,0, -s,0,c], M = [];
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) M[i*3+j] = T[i*3] * U[j] + T[i*3+1] * U[3+j] + T[i*3+2] * U[6+j];
+    return M;
+  }
+
+  /* robust bounds (ignoring stray floaters) after orienting */
+  function bounds(S, R){
+    const n = S.count, v = [[], [], []];
+    for (let i = 0; i < n; i += Math.max(1, n / 20000 | 0)){
+      if (S.col[i*4+3] < .05) continue;
+      const x = S.pos[i*3], y = S.pos[i*3+1], z = S.pos[i*3+2];
+      for (let a = 0; a < 3; a++) v[a].push(R[a*3] * x + R[a*3+1] * y + R[a*3+2] * z);
+    }
+    v.forEach(a => a.sort((p, q) => p - q));
+    const at = (a, f) => v[a][Math.floor(f * (v[a].length - 1))];
+    return { lo:[0,1,2].map(a => at(a, .005)), hi:[0,1,2].map(a => at(a, .995)) };
+  }
+
+  /* positions and 3D covariances in display space: p' = (R p - center) * k + offset */
+  function prepare(S, { R, k, center, offset }){
+    const n = S.count, pos = new Float32Array(n*3), cov = new Float32Array(n*6), off = offset || [0,0,0];
+    for (let i = 0; i < n; i++){
+      const x = S.pos[i*3], y = S.pos[i*3+1], z = S.pos[i*3+2];
+      for (let a = 0; a < 3; a++) pos[i*3+a] = (R[a*3] * x + R[a*3+1] * y + R[a*3+2] * z - center[a]) * k + off[a];
+      const w = S.rot[i*4], qx = S.rot[i*4+1], qy = S.rot[i*4+2], qz = S.rot[i*4+3];
+      const r = [1 - 2*(qy*qy + qz*qz), 2*(qx*qy - w*qz), 2*(qx*qz + w*qy),
+                 2*(qx*qy + w*qz), 1 - 2*(qx*qx + qz*qz), 2*(qy*qz - w*qx),
+                 2*(qx*qz - w*qy), 2*(qy*qz + w*qx), 1 - 2*(qx*qx + qy*qy)];
+      const s = [S.scl[i*3] * k, S.scl[i*3+1] * k, S.scl[i*3+2] * k], m = [];
+      for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) m[a*3+b] = (R[a*3] * r[b] + R[a*3+1] * r[3+b] + R[a*3+2] * r[6+b]) * s[b];
+      const c = (a, b) => m[a*3] * m[b*3] + m[a*3+1] * m[b*3+1] + m[a*3+2] * m[b*3+2];
+      cov[i*6] = c(0,0); cov[i*6+1] = c(0,1); cov[i*6+2] = c(0,2); cov[i*6+3] = c(1,1); cov[i*6+4] = c(1,2); cov[i*6+5] = c(2,2);
+    }
+    return { count:n, pos, cov };
+  }
+
+  /* one instanced quad per splat, data in float textures, order sorted on the CPU.
+     uniforms: uAlpha (overall fade), uGrow (0 = gone, 1 = whole; builds from the base up) */
+  function createMesh(THREE, P, S){
+    const N = P.count, TW = 1024, TH = Math.max(1, Math.ceil(N / TW));
+    const mk = () => new Float32Array(TW * TH * 4);
+    const tC = mk(), tK = mk(), tA = mk(), tB = mk();
+    let y0 = Infinity, y1 = -Infinity;
+    for (let i = 0; i < N; i++){
+      tC[i*4] = P.pos[i*3]; tC[i*4+1] = P.pos[i*3+1]; tC[i*4+2] = P.pos[i*3+2];
+      tK[i*4] = S.col[i*4]; tK[i*4+1] = S.col[i*4+1]; tK[i*4+2] = S.col[i*4+2]; tK[i*4+3] = S.col[i*4+3];
+      tA[i*4] = P.cov[i*6]; tA[i*4+1] = P.cov[i*6+1]; tA[i*4+2] = P.cov[i*6+2];
+      tB[i*4] = P.cov[i*6+3]; tB[i*4+1] = P.cov[i*6+4]; tB[i*4+2] = P.cov[i*6+5];
+      if (S.col[i*4+3] > .1){ const y = P.pos[i*3+1]; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    const tex = a => { const t = new THREE.DataTexture(a, TW, TH, THREE.RGBAFormat, THREE.FloatType); t.needsUpdate = true; return t; };
+    const geo = new THREE.InstancedBufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-2,-2,0, 2,-2,0, 2,2,0, -2,2,0]), 3));
+    geo.setIndex([0,1,2, 0,2,3]);
+    const order = new Float32Array(N); for (let i = 0; i < N; i++) order[i] = i;
+    const oa = new THREE.InstancedBufferAttribute(order, 1); oa.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('iIndex', oa); geo.instanceCount = N;
+    const U = { tC:{value:tex(tC)}, tK:{value:tex(tK)}, tA:{value:tex(tA)}, tB:{value:tex(tB)},
+                uView:{value:new THREE.Vector2(1, 1)}, uAlpha:{value:1}, uGrow:{value:1}, uYR:{value:new THREE.Vector2(y0, Math.max(y0 + 1e-3, y1))} };
+    const mat = new THREE.ShaderMaterial({ glslVersion:THREE.GLSL3, uniforms:U, transparent:true, depthTest:false, depthWrite:false, side:THREE.DoubleSide,
+      blending:THREE.CustomBlending, blendSrc:THREE.OneFactor, blendDst:THREE.OneMinusSrcAlphaFactor,
+      vertexShader:`
+        precision highp float; precision highp sampler2D;
+        in float iIndex; uniform sampler2D tC, tK, tA, tB; uniform vec2 uView, uYR; uniform float uAlpha, uGrow;
+        out vec4 vCol; out vec2 vPos;
+        void main(){
+          int id = int(iIndex); ivec2 uv = ivec2(id % ${TW}, id / ${TW});
+          vec4 c = texelFetch(tC, uv, 0), col = texelFetch(tK, uv, 0);
+          float h = clamp((c.y - uYR.x) / (uYR.y - uYR.x), 0., 1.);
+          float g = smoothstep(0., 1., (uGrow - h * .45) / .55);
+          vec4 cam = modelViewMatrix * vec4(c.xyz, 1.);
+          vec4 clip = projectionMatrix * cam;
+          if (g * uAlpha < .003 || cam.z > -1e-4){ gl_Position = vec4(0., 0., 2., 1.); return; }
+          vec4 a = texelFetch(tA, uv, 0), b = texelFetch(tB, uv, 0);
+          mat3 V = mat3(a.x, a.y, a.z, a.y, b.x, b.y, a.z, b.y, b.z) * (g * g);
+          float zp = -cam.z, fx = projectionMatrix[0][0] * uView.x * .5, fy = projectionMatrix[1][1] * uView.y * .5;
+          mat3 J = mat3(fx / zp, 0., 0., 0., fy / zp, 0., fx * cam.x / (zp*zp), fy * cam.y / (zp*zp), 0.);
+          mat3 T = J * mat3(modelViewMatrix);
+          mat3 c2 = T * V * transpose(T);
+          float xx = c2[0][0] + .3, yy = c2[1][1] + .3, xy = c2[0][1];
+          float mid = .5 * (xx + yy), rad = length(vec2(.5 * (xx - yy), xy));
+          float l1 = mid + rad, l2 = max(mid - rad, .1);
+          vec2 dir = normalize(vec2(xy, l1 - xx) + vec2(1e-6, 0.));
+          vec2 major = min(sqrt(2. * l1), 2048.) * dir, minor = min(sqrt(2. * l2), 2048.) * vec2(dir.y, -dir.x);
+          vPos = position.xy; vCol = vec4(col.rgb, col.a * g * uAlpha);
+          gl_Position = vec4(clip.xy / clip.w + (position.x * major + position.y * minor) * 2. / uView, 0., 1.);
+        }`,
+      fragmentShader:`
+        precision highp float; in vec4 vCol; in vec2 vPos; out vec4 outColor;
+        void main(){ float A = -dot(vPos, vPos); if (A < -4.) discard; float B = exp(A) * vCol.a; outColor = vec4(vCol.rgb * B, B); }` });
+    const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false;
+    const dep = new Float32Array(N), keys = new Uint16Array(N), counts = new Uint32Array(65536), MV = new THREE.Matrix4();
+    function sort(camera){
+      MV.multiplyMatrices(camera.matrixWorldInverse, mesh.matrixWorld); const e = MV.elements, p = P.pos;
+      let mn = Infinity, mx = -Infinity;
+      for (let i = 0; i < N; i++){ const d = e[2] * p[i*3] + e[6] * p[i*3+1] + e[10] * p[i*3+2] + e[14]; dep[i] = d; if (d < mn) mn = d; if (d > mx) mx = d; }
+      const s = 65535 / Math.max(1e-9, mx - mn); counts.fill(0);
+      for (let i = 0; i < N; i++){ const k = (dep[i] - mn) * s | 0; keys[i] = k; counts[k]++; }
+      for (let i = 1; i < 65536; i++) counts[i] += counts[i-1];
+      for (let i = N - 1; i >= 0; i--) order[--counts[keys[i]]] = i;
+      oa.needsUpdate = true;
+    }
+    const setView = (w, h) => U.uView.value.set(w, h);
+    const dispose = () => { geo.dispose(); mat.dispose(); ['tC','tK','tA','tB'].forEach(k => U[k].value.dispose()); };
+    return { mesh, uniforms:U, sort, setView, dispose, count:N };
+  }
+
+  return { readSOG, orient, bounds, prepare, createMesh };
+})();
+</script>
 
 <script>
 /* ==========================================================================
@@ -266,65 +783,176 @@ function setTheme(t){ document.documentElement.setAttribute('data-theme',t); the
 setTheme(read('archive-theme') || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
 themeBtn.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
 
-/* catalogue tiles */
-$('cat-count').textContent=`${CATALOGUES.length} collections`;
+/* catalogue index: numbered rows; the stage beside them shows each catalogue's work */
 const cats=$('cats');
-CATALOGUES.forEach(c=>{
-  const a=document.createElement('a');
-  a.className='cat'; a.href=c.href; a.style.setProperty('--h',c.hue);
-  a.innerHTML=`<span class="accent"></span><span class="glyph">${c.name.trim()[0]||''}</span>
-    <h3 class="cat-name">${c.name}</h3>
-    <p class="cat-desc">${c.desc}</p>
-    <span class="enter">Open catalogue</span>`;
-  cats.appendChild(a);
+CATALOGUES.forEach((c,i)=>{
+  const li=document.createElement('li'); li.dataset.i=i;
+  li.innerHTML=`<a href="${c.href}"><span class="ix-num">${String(i+1).padStart(2,'0')}</span>
+    <span class="ix-name">${c.name}<span class="ix-desc">${c.desc}</span></span>
+    <span class="ix-count"><span data-count></span><i aria-hidden="true">&rarr;</i></span></a>`;
+  cats.appendChild(li);
 });
+$('cat-count').textContent=`${CATALOGUES.length} collections`;
 
-/* ==========================================================================
-   Hero point cloud — an abstract "scanned object": points on a jittered
-   ellipsoid shell, slowly rotating, depth-faded. Reduced-motion → one frame.
-   ========================================================================== */
-const canvas=$('cloud'), ctx=canvas.getContext('2d');
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* ATU mark as points: used by the intro if logo.png cannot be read */
 const LOGO=[-485, 311, -256, -246, -380, 508, 131, -666, 118, -548, 636, 980, 203, -456, -570, 416, -105, -613, -682, 895, 230, 10, 72, -725, 105, -489, -210, 652, -131, 593, 249, -561, -393, 108, 118, -469, 269, 620, -210, -607, -367, -338, 341, 43, -184, -593, -400, 515, 157, -659, -210, 36, -72, -672, -334, -305, -72, 233, -708, 600, 302, -272, 426, 993, 151, -364, 570, 272, 426, -141, -216, -416, 321, -108, 439, 430, 230, -443, 210, -593, 7, -607, 485, -30, -754, 856, -584, 974, 7, 633, 472, 285, 367, 751, -603, 718, 52, 403, 584, 252, 505, 128, -269, -141, 472, 115, -321, -502, -452, 259, -872, 954, -485, 849, 328, 351, -590, 698, 439, 226, -177, -541, 269, -364, -715, 908, -361, 593, -262, -200, -485, 351, 230, -246, 39, 830, 243, 607, -170, -711, -190, -521, 302, 285, 7, 344, 184, 370, -643, 856, 367, 725, -223, -561, -26, -456, -39, 187, -590, 784, -26, -580, -111, -600, -210, 279, -85, 685, 230, 220, -597, 482, -531, 364, -39, -816, -498, 744, 623, 384, 433, -193, -151, -364, 144, 843, -275, -607, 341, 23, 223, 226, -367, -318, 157, 128, -675, 521, -131, 495, -715, 856, -216, -508, -446, -193, -79, 698, -452, 534, -249, 207, -354, -292, -741, 646, 0, 207, 230, 580, -190, 397, -472, 462, 544, 69, -230, -246, 164, -502, 452, -161, -66, -246, 275, 75, -243, 82, 59, -895, 446, 816, -466, -128, 426, 167, 295, 213, -85, -961, 79, -266, 728, 593, -269, 980, -85, 423, -157, 298, 361, -338, 203, 915, -138, -633, -721, 731, -479, 502, -603, 521, 275, 521, 446, 502, -7, -416, -216, 810, 157, 528, -20, -593, 243, -95, -223, -567, 380, -16, -439, 672, 315, -213, -203, -390, -26, 344, -190, -639, 216, -423, -26, -1000, -79, -246, -675, 987, -177, -423, -302, 410, -39, -797, -170, -554, -341, -16, 459, 443, -387, -252, 230, 141, -46, 364, 59, 410, -570, 784, 0, -344, -131, -370, -695, 830, 538, 751, 787, 803, -249, 816, -511, 285, 79, -489, 243, -272, 131, -423, -39, 351, 111, 174, -721, 803, -52, -213, 682, 915, 190, -816, -210, -30, 125, 961, 125, 403, -374, -259, 190, -790, 66, 961, -138, 252, 249, -469, -275, 167, 492, 921, -72, 416, -151, -193, -610, 390, -203, 43, 46, 974, -689, 1000, 131, 875, -570, 325, 256, 43, 308, -75, 190, 102, 328, 528, 354, 56, 452, -56, -26, 921, -682, 843, -662, 390, 138, -777, 131, -784, 426, 207, 544, 770, 66, 161, 289, -82, -656, 357, -590, 692, -459, 370, 262, 410, -230, -508, -472, 36, 118, -423, 400, 56, 216, 764, 348, -69, 289, 338, 452, -36, 656, 810, -138, -980, -190, 803, 551, 351, 275, -495, 295, -357, -230, 489, 197, -56, 66, 797, -144, -148, -92, 652, -649, 331, -223, -482, 367, 508, 380, 744, -564, 534, 334, -495, -289, -220, -354, -180, 236, -331, -33, -784, -131, -246, 262, 751, 289, -266, -282, 784, 282, 370, 190, -233, 341, -318, -125, -823, -85, -875, -334, -416, 570, 954, -184, -285, -138, 652, -203, -75, -354, -3, 157, -784, -125, 141, -282, 3, 138, 239, 603, 869, -452, 108, 446, 311, 144, 161, 754, 593, 380, -318, -13, -600, -544, 384, 315, 731, -734, 921, -734, 607, -597, 875, 243, -318, -538, 974, 164, -246, 557, 941, 26, 902, -79, -843, -708, 672, 170, -128, 144, -967, 151, -252, 151, -174, -20, -279, 177, 777, -295, -351, -230, -593, 439, 311, 472, 921, 387, 967, 413, 810, 367, -410, -46, -620, 538, 128, -433, -89, 564, 200, 111, -698, -348, -436, -426, 895, -236, 711, 105, -784, -131, -587, -105, 679, 282, 311, -426, 889, -544, 908, 236, -56, -531, 207, -46, 711, -118, 895, 577, 974, -407, 895, 177, 128, 131, 941, 243, 161, 328, -43, -420, 692, -262, -292, -111, 587, 256, -351, -485, 502, 485, 672, -7, 292, 164, -548, -407, 108, 525, 633, -210, -541, -321, 3, -623, 266, -210, -344, 426, -239, -295, 416, -243, -272, -564, 148, -210, -292, 230, 757, 223, 30, -472, 521, 400, 823, -361, -207, -538, 49, -46, -213, -177, 646, 249, 915, 374, 541, -426, 344, -79, 607, -426, -69, 105, 390, -197, 298, 72, -462, -393, 416, -144, -836, 393, 338, -787, 738, -570, 672, 52, -849, -230, 475, 223, 325, -243, 921, -33, 246, -505, 908, 269, -587, 302, -384, 374, 62, -203, -410, -33, -495, 459, 174, -387, 193, -7, -711, -157, -134, 177, 187, -275, -318, -649, 613, -262, 161, -682, 554, -39, -252, -682, 987, -393, 915, -780, 849, -393, 318, 262, -475, 275, 207, 262, -620, 269, -128, -511, 626, 105, -548, -472, 187, -98, -856, -118, -475, -518, 167, -170, -495, -367, 43, 72, -574, -20, 174, 282, -351, -243, 718, -164, -895, -413, 344, -564, 593, 256, 180, 380, -325, 39, -692, -866, 961, -498, 102, 334, -397, 59, 167, -39, -652, -334, -134, -393, -43, -452, 285, 334, 266, 859, 967, 446, -30, 79, 233, -66, 685, -446, 869, -413, -148, 210, 187, 85, -849, 433, 134, -164, -725, 13, -869, -190, -843, -321, 889, 374, -102, -767, 915, 85, 784, 249, 121, -662, 692, -289, -403, 328, 646, -610, 849, -170, 502, 393, 889, 269, 272, 439, 10, -289, 69, -7, 351, -466, -56, 20, -285, -289, 548, 26, 364, 33, -633, -164, -318, -79, -875, 0, -554, -511, 154, -643, 646, -164, -207, -92, -626, 144, -495, 223, 462, -197, 889, 538, 108, 177, 239, -125, -679, -328, 738, -452, -115, 20, -226, -426, 187, 66, 685, 13, -967, -544, 174, -72, 410, 413, 318, -610, 311, -518, 121, 197, -744, -236, 279, 197, 23, 92, 390, -203, -128, 66, -993, 564, 331, 662, 462, -111, -495, -46, 784, 216, 207, 577, 875, 282, -49, 400, 128, 616, 882, -20, -954, 184, -469, -144, 174, -289, -469, 138, -272, 721, 521, -118, -698, 380, 502, -66, -816, 531, 252, 7, 266, -466, 82, -728, 967, -92, -233, 380, 489, 505, 311, 498, 843, 7, -252, 46, 220, -321, -266, -230, -685, 59, 908, -275, 639, -157, -285, -695, 948, 111, 882, -46, -862, 197, 69, -262, -489, 177, -764, -33, -698, -367, -305, -452, 403, -144, -410, -636, 449, 702, 705, 131, -652, -20, -843, -780, 974, -472, 121, 289, 830, -308, 174, -118, -967, -511, 731, -262, -554, -852, 882, 236, 980, -39, -462, -308, 954, -177, -574, -695, 784, 203, 141, -269, -534, 452, 174, -426, 89, -203, -30, 538, 69, 230, 738, 256, 843, 26, 469, 79, -528, -387, 803, 170, 226, 0, -672, 393, -62, -249, -521, -20, -259, 341, 325, -203, 148, 85, 266, -216, -305, -118, -889, 380, 810, -118, -600, -544, 823, -538, 187, -295, -430, -243, 23, 426, 830, 466, 233, -833, 921, -590, 226, -151, 751, 498, 751, -761, 757, -308, -357, -197, -56, -590, 285, 66, -489, -439, 777, 190, -856, -79, 233, -656, 738, -39, -528, 361, 889, 79, 698, -590, 187, 92, 482, -203, -10, -492, -3, -203, -534, -52, -469, 59, -279, -479, 948, 20, 167, 295, 397, 230, -311, 328, 895, 492, 207, 230, -384, 498, 410, -295, 75, 551, 856, -328, 823, 426, 502, 98, -803, -197, -220, 0, -967, 328, 836, -59, 705, 308, 548, 275, 259, -387, -279, -433, 587, 531, 351, 407, 443, 33, 292, -52, -351, 144, 325, 72, -987, -177, 311, 525, 338, 354, -357, -85, -895, 26, 233, -518, 148, 361, 430, -33, -580, -249, 502, -472, 495, -72, -528, 328, 633, -197, 200, 125, -666, -262, 213, -72, -423, -52, -646, -557, 226, -230, -252, -256, 134, 525, 174, -170, 659, 308, 902, -170, 292, -433, -95, -98, 436, 138, 633, 151, -777, -433, 528, -321, -36, 111, -659, 26, 567, -20, 705, 354, -292, -308, 226, -715, 823, -105, -659, 354, -331, 170, -180, 525, 770, -118, 580, 407, 351, 216, 213, -275, 252, -446, 154, 492, 161, -531, 554, -400, 102, -203, 259, -669, 816, -623, 508, 223, -357, 125, -193, 39, -213, 39, -534, -374, -16, -92, 869, -328, 856, 413, 30, -793, 718, -511, 331, 734, 698, -197, 633, -33, -285, 387, -89, 466, 115, 125, -469, -452, -161, -525, 351, 282, -469, 131, 298, -203, 102, -492, 423, -374, 161, -236, -43, 118, -836, -138, 574, 223, 469, -610, 580, -374, 948, 243, -10, -485, 449, 92, 187, 492, 338, -98, -593, -695, 862, -387, 207, 551, 397, -262, -331, -590, 882, -643, 967, -282, 16, 243, -462, 426, 187, 518, 128, -138, 475, -603, 528, 79, 685, 52, 646, -439, 285, 52, -823, 328, -331, 184, -757, -564, 626, 85, 777, 518, 830, -52, -1000, -203, -541, 289, 495, -177, 961, 407, 757, -538, 698, 525, 128, 157, -397, -505, 49, 400, -239, 262, -246, -675, 941, 92, -397, -275, 731, -302, -489, -26, -711, -92, -987, -361, -331, 544, 75, 111, -725, -190, 266, -157, -325, -144, 141, 498, 659, -7, -384, -328, -430, -157, -554, -413, 259, -66, 948, -262, -89, -426, 489, -374, 167, 485, 43, 98, -993, 72, -908, 39, 987, 92, 259, 380, 738, 79, 207, 151, 292, -531, 115, -649, 790, -20, 954, -433, 89, -302, 128, -184, -770, -675, 574, 105, 272, -131, -626, 39, -823, 492, -82, -623, 862, 92, 600, 7, -508, 328, 154, -269, 62, 125, 620, 433, 423, 374, 56, -610, 843, 46, -744, 426, 338, 748, 600, 367, 403, -584, 515, 302, -62, 131, -941, -230, 239, -859, 889, -184, -567, 98, 849, -334, -49, -570, 285, 413, -82, -538, 75, 157, 751, 302, 36, 223, 174, -256, 246, 138, -397, 131, 849, -256, -108, 374, 43, 636, 816, 216, 587, -216, -620, 380, -266, 85, 502, 20, -633, -210, 3, 0, -810, 131, -279, 328, 580, 46, -646, 236, -607, -354, -121, -72, 502, 157, 698, 498, 285, -295, -377, -85, -515, 138, -200, 551, 318, 275, -95, -387, -115, 511, 948, 177, 757, 33, -757, -525, 285, -505, 456, 230, 436, 308, 325, -754, 679, 230, -187, 118, -397, -13, -974, 79, -521, 597, 207, -138, -508, -603, 377, 230, 600, 374, -344, 452, -23, -649, 462, 111, 390, -603, 279, 498, 646, 210, -482, 20, -659, 164, 777, -439, -69, -675, 436, -708, 1000, 466, 685, -328, -82, 584, 305, 98, 410, -92, 784, -203, -764, -118, 567, 328, 128, -256, 548, -46, -705, 177, 443, -98, -738, -656, 751, 125, -593, -125, -593, 223, 154, 216, -75, 243, -593, -446, 344, -643, 410, -216, 193, 407, 331, 203, -692, 177, 167, 210, 292, 7, 200, -433, 252, 79, -967, 118, -580, -151, -803, 295, 82, 131, -403, 754, 784, 426, 751, -184, 482, -466, 141, 275, 639, -39, 843, 275, -311, -702, 856, -210, -128, -7, -921, -387, 266, -59, -246, 459, 89, -72, 318, 243, 298, 420, 738, 170, 403, -236, -515, -741, 908, -387, -62, 361, 495, 177, -220, -197, 128, -708, 561, -138, -580, -52, -744, -144, 810, 341, 311, -374, -213, -767, 633, -13, -410, 0, -548, 164, 174, -26, -495, 197, -16, -203, -443, -479, 607, -466, 862, -702, 692, -400, -167, 439, 82, 367, -311, 72, 587, 485, 738, -361, 89, 892, 987, 59, -351, 551, 239, 492, 239, 420, 207, 170, 180, -511, 436, -157, 148, 564, 161, -223, -56, 328, 666, -144, 128, -289, -115, -138, 121, 184, 89, -52, -239, 46, 213, -479, -102, 590, 311, -105, -580, 564, 508, -203, 141, 367, 121, -728, 895, 72, 954, 144, -430, -715, 751, -131, -725, 197, -423, 85, -961, 92, 784, -407, 75, 564, 692, -170, -705, 446, 239, -433, 82, -7, -357, -33, -652, 420, -102, -479, -75, 13, -534, 367, 430, -138, 908, 459, -154, -452, 698, 393, 161, -46, -941, 230, -410, -26, 370, -262, 23, 52, -725, -321, 423, -39, 344, -105, -279, -66, -685, 282, -36, 367, 148, -98, -718, 118, -902, -308, 318, 72, 561, 184, 430, 413, -121, -361, 285, -52, -521, -334, -36, -151, -757, -20, 849, -387, 816, -170, -587, -498, 561, -210, -423, -26, 508, -393, -233, -728, 980, 308, -469, 85, -207, 551, 515, 492, 187, -682, 567, -328, 220, 190, 272, -485, 593, -164, -646, -295, 285, 348, 390, -452, 580, -190, 587, 105, -849, -230, 410, -439, -62, -230, 495, -13, 548, -223, -36, 72, -948, 170, 652, -400, -226, -616, 620, -157, -377, 26, -469, 302, 410, 472, 738, 420, -213, -92, -318, 170, -875, -20, -646, 380, -279, -380, 515, 79, -475, -505, 430, 328, 882, -348, -174, 164, -266, 190, 364, 105, -213, -459, 934, -302, -174, 275, -574, 46, -397, -603, 475, -643, 836, -380, -62, 131, 259, 72, -331, 164, -692, 800, 810, 636, 285, 151, -639, -584, 489, 256, -489, 321, -220, -511, 43, -531, 548, -269, -69, -433, 777, 308, 23, -98, -698, -610, 528, 177, 921, -433, -226, 662, 469, 151, 397, 92, -344, 466, -89, 144, -705, -144, -718, -328, 311, 125, -364, -702, 495, -20, 725, -400, 272, 111, 600, 452, 272, -282, 134, -20, 626, 249, 489, 361, 416, -780, 692, -433, 882, -367, 666, 236, -148, -111, -810, -39, -967, 374, 830, 230, 751, -223, 89, -767, 692, 367, 731, -354, -141, -33, 777, 111, 528, 52, -403, 282, -574, 52, -325, -275, 397, -708, 646, 564, 410, -138, -462, 420, 672, 98, 882, -275, 902, 0, -705, 33, -318, -157, -502, 295, 285, 662, 902, 170, -515, -20, -633, -216, 882, 387, 449, 151, -298, 111, -797, -33, -574, -354, -390, 315, -82, -197, -311, 407, 836, 413, 226, -197, -200, -190, 36, 197, -580, 492, 370, 216, 141, -328, -220, -479, 311, -269, 200, 662, 725, 13, -272, -111, 148, -210, 875, 341, 803, 190, -16, 479, 167, -111, 889, 177, 95, 46, 298, 380, 430, -216, -725, -334, -56, 367, -134, 164, 541, -144, -213, -98, 207, -59, 318, -498, 449, -170, -187, -72, 174, -249, -370, 256, -666, 393, 397, -767, 718, -39, 934, -275, -410, 138, 141, 452, 980, -715, 508, -59, 430, 105, 174, 249, 443, -216, 423, 302, -266, 597, 397, -66, 325, 131, -508, 748, 672, 243, 69, -243, -154, 367, 246, 466, 915, -328, 148, -13, 279, -170, 285, 92, -987, -85, -744, 387, 36, 518, 233, 348, 646, -597, 593, -92, 410, -85, -666, -20, -311, -479, 830, -518, 62, 26, -679, -157, -816, -125, -974, 407, 384, -210, 266, -256, -403, -7, 941, 334, 390, -682, 980, -302, 49, 223, 574, -66, 259, -98, -305, 374, -36, -275, 416, 151, 784, -387, -220, 341, -305, -144, -875, 249, 115, -59, -252, 230, -449, 0, -587, -348, -266, -111, 187, 144, 534, -111, 174, 170, -902, 223, -626, 249, 370, 184, 679, -111, 921, -649, 843, -203, -200, 46, -1000, -138, -685, 256, -600, -741, 974, -157, -797, -669, 554, -321, -115, 289, 95, -131, -220, 52, -613, -170, -889, -413, -62, 282, -279, 203, 574, 282, -56, 433, 921, 761, 889, 210, 580, 452, -167, 256, 895, -308, 279, 46, -587, -446, 259, 216, -666, 20, 797, 623, 987, -39, -941, -92, 443, 164, 659, 223, 751, -256, -508, 20, 711, -151, -161, -321, 56, 13, -410, -144, 167, 420, 75, 151, -718, 184, -344, 643, 331, -518, 174, -210, -639, -551, 180, -249, 659, 144, 941, 341, 174, 39, 246, 525, 16, -118, -489, -689, 895, -39, -869, 452, -187, 577, 161, 446, 89, 413, -43, -144, -220, -472, 318, 184, -89, -157, 489, 256, 318, -184, 102, 321, 456, -787, 987, -393, 764, 505, 770, 341, 967, -26, -941, -39, -790, 407, 659, 282, 82, 256, 272, 420, -3, 308, 495, -111, -521, -407, -174, -387, -266, 7, -751, 131, -790, -105, -384, -118, -403, -407, 357, 98, -279, 33, -777, 52, -764, -125, -698, 282, -292, -203, -692, -13, -567, -26, -672, 302, -580, -387, 410, -774, 980, -223, -574, -557, 475, 66, -403, -511, 128, 387, -30, -439, -36, -72, -384, 190, -744, 85, -482, 190, 226, -544, 797, -144, -430, 249, -311, -295, -436, -302, -30, -459, 246, 72, 298, -236, 338, -256, 167, 72, -830, 92, 154, 584, 213, 184, -666, -669, 423, -485, 305, -302, 882, -105, 790, 315, 226, 98, -764, -79, 574, 210, -764, -79, 659, 695, 921, -105, -436, -630, 364, -702, 764, 59, -666, 308, 987, 341, 16, 197, -469, 85, 226, -197, -180, -118, -987, 577, 941, -282, -43, 610, 226, -151, -633, 26, -961, 131, 364, -367, 836, 184, -449, 236, 836, -177, -121, -793, 849, -452, 364, -111, 915, -505, 167, -269, -220, -144, 220, 236, 10, -230, 75, 210, -200, -210, -390, -85, -508, -741, 836, -295, -410, -570, 318, -643, 390, -52, -449, -656, 534, -479, 508, 203, -489, -734, 613, -184, -797, 249, 430, -472, -23, -466, 266, -564, 174, 334, 633, 728, 869, 315, -180, 262, 456, 170, 82, 479, 738, 170, -331, -734, 974, -46, -744, 426, 364, -557, 318, 170, 934, -59, -233, -551, 705, 597, 305, 354, -187, -59, 666, 308, 154, -446, 75, -184, -331, 13, 331, -334, 744, 407, 95, -433, 895, -321, -89, 92, 180, 85, 259, -374, -233, 223, -233, 144, 128, -603, 318, 813, 934, 485, 364, -275, -213, 492, 89, 46, 318, 295, -102, -230, 161, -33, -423, -413, -200, -105, -423, 426, -75, -275, 475, -210, -246, 367, -259, 341, 259, 498, 652, 433, 193, -236, -69, 256, -397, -39, -403, -190, 213, -334, -23, -315, 489, -26, -744, -59, -889, 295, 521, 46, 659, -348, 43, -210, 869, 295, 246, 433, 744, 184, -823, 85, -279, -282, 548, -85, -948, -564, 115, 315, 639, -439, 607, 380, 62, 393, 62, -177, -134, -190, -338, -190, 718, 636, 646, -13, 285, 334, 161, -446, 600, -518, 115, -59, 528, 426, -233, 262, 134, -728, 620, 807, 810, -341, 725, -66, -836, 354, 561, -157, -128, 39, 318, 144, -908, 525, 830, -249, -403, -138, -718, -387, 141, 203, 23, -315, -213, 407, -56, -656, 928, 308, 364, -341, -423, -584, 731, 767, 993, -308, -30, -321, 790, -538, 908, -33, -862, 302, 423, 151, 934, 59, 351, -315, 567, -525, 731, 282, -10, 466, -128, -426, 502, 505, 908, -190, -344, 630, 384, -131, -620, 321, 141, -538, 200, -590, 469, -636, 528, 243, -600, -118, -882, 46, -534, 197, 593, 741, 600, 85, 377, 282, 174, 249, -397, -230, 49, -315, 266, 170, 528, -793, 961, -426, 30, 584, 495, -203, 744, 439, -3, 446, -207, -387, -318, -164, -561, -269, -82, -610, 764, -302, 56, 328, -266, 518, 377, 315, 574, 387, 757, -505, 246, 216, -338, -433, 764, 315, 384, 420, 69, 66, 180, 426, 443, -374, 148, 269, 626, -223, -115, -197, 810, -92, -974, -13, 213, -636, 397, -295, 121, 223, 259, 577, 298, -157, 803, 426, 816, -767, 639, 420, 403, -302, -239, -452, 266, 315, 475, 59, -620, -184, -489, -111, 311, 315, -285, 354, 967, 0, 357, -138, -869, 164, -902, -236, -10, -72, -548, 151, 239, 249, 134, -157, -423, -348, -272, 197, 82, -328, 711, 557, 357, -334, -239, 282, -16, 518, 534, -295, 980, 374, -193, -13, -469, -584, 252, -367, -62, 833, 843, 230, 3, 420, 967, 243, -521, -151, 666, -197, -364, -348, -357, -7, 174, -748, 600, 426, 82, -144, -285, 72, 777, -479, 843, 85, -613, 59, 816, -361, 757, 374, -272, 190, 836, -518, 128, -682, 862, -407, -200, -302, 993, 66, -941, 361, -220, -544, 305, 328, 757, 151, 856, 557, 246, 439, 751, -498, 443, 13, 626, 466, 593, 138, -534, 334, -141, -662, 403, -59, -777, -79, -830, 151, -679, -230, 325, 138, -456, 59, 902, -105, 816, 321, 816, 407, -272, -39, -744, 341, 3, 584, 580, 177, -331, -649, 344, 348, -456, -308, 416, 518, 344, -636, 954, -485, -3, 39, 220, -721, 659, -590, 613, -236, 141, -125, -639, -269, 233, 105, 239, 498, 384, 164, 843, 334, 541, -131, 331, -295, 882, -485, 193, 282, 889, -426, 357, -282, -36, 544, 836, 210, -364, -39, 325, 348, -89, 472, 292, 348, 252, -328, -325, 131, -482, 190, -711, 164, 521, -649, 554, 210, -659, -92, 521, -387, 259, -79, -397, -98, -941, -151, -672, -393, -95, 577, 784, 92, 869, 380, 443, -177, -259, 170, -502, -400, 3, -59, -711, 39, 731, 131, -167, -223, -423, -269, -134, -151, -725, 131, 607];
-const BRAND=[47, 97, 100];
-let W=0,H=0,DPR=1,pts=[],raf=null,t0=null;
-
-function colors(){ const dark=document.documentElement.getAttribute('data-theme')==='dark';
-  return dark?[Math.min(255,BRAND[0]+78),Math.min(255,BRAND[1]+72),Math.min(255,BRAND[2]+70)]:BRAND; }
-function build(){
-  pts=[]; const n=LOGO.length/2;
-  for(let i=0;i<n;i++){
-    const yy=1-(i/(n-1))*2, rr=Math.sqrt(Math.max(0,1-yy*yy)), th=i*2.399963;
-    pts.push({ ax:Math.cos(th)*rr, ay:yy, az:Math.sin(th)*rr, lx:LOGO[i*2]/1000, ly:LOGO[i*2+1]/1000, dp:0.55+Math.random()*0.45 });
-  }
-}
-function resize(){ const rect=canvas.getBoundingClientRect(); DPR=Math.min(2,window.devicePixelRatio||1);
-  W=rect.width; H=rect.height; canvas.width=W*DPR; canvas.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); if(reduce) draw(1,0); }
-function eio(x){ return x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2; }
-function draw(e,ang){
-  ang=ang||0; ctx.clearRect(0,0,W,H);
-  const cx=W/2, cy=H/2, R=Math.min(W,H)*0.42, col=colors(), focal=2.6;
-  const ca=Math.cos(ang), sa=Math.sin(ang), a=[];
-  for(let i=0;i<pts.length;i++){ const p=pts[i];
-    const rx=p.ax*ca-p.az*sa, rz=p.ax*sa+p.az*ca, ry=p.ay;
-    a.push({ x:rx+(p.lx-rx)*e, y:ry+(p.ly-ry)*e, z:rz+(0-rz)*e, dp:p.dp });
-  }
-  a.sort((m,n)=>m.z-n.z);
-  const base=Math.max(1,R*0.012);
-  for(let i=0;i<a.length;i++){ const q=a[i];
-    const s=focal/(focal-q.z*0.9), depth=(q.z+1)/2;
-    const alpha=Math.min(0.95,(0.18+depth*0.6)*(0.7+q.dp*0.45));
-    ctx.beginPath(); ctx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${alpha.toFixed(3)})`;
-    ctx.arc(cx+q.x*R*s, cy+q.y*R*s, base*(0.7+depth*0.8)*s, 0, 6.283); ctx.fill();
-  }
-}
-function loop(ts){ if(t0===null) t0=ts; const el=ts-t0, t=(el%20000)/20000, tri=t<0.5?t*2:(1-t)*2; draw(eio(tri), el*0.00018); raf=requestAnimationFrame(loop); }
-
-build(); resize();
-window.addEventListener('resize',()=>{ clearTimeout(window.__rz); window.__rz=setTimeout(()=>{ resize(); if(reduce) draw(1,0); },150); });
-if(!reduce) raf=requestAnimationFrame(loop); else draw(1,0);
-themeBtn.addEventListener('click',()=>{ if(reduce) draw(1,0); });
 </script>
+
+<!-- ==========================================================================
+     HOME PAGE SCAN VIEWER — each catalogue's featured work, drawn as true
+     Gaussian splats. Its thumbnail shows at once; the live scan fades in
+     over it when ready. Hover a catalogue to switch; the works in the
+     chosen catalogue take turns every few seconds. Models come from each
+     catalogue's projects.json: ones ticked for the intro first, then any
+     other .sog models.
+     ========================================================================== -->
+<script type="module">
+const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+const FOLDERS = CATALOGUES.map(c => c.href.split('/')[0]);            // e.g. "architecture"
+const CYCLE = 11000;                                                    // ms per work before the next one
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stageEl = document.getElementById('ix-stage'), canvas = document.getElementById('ix-gl');
+const posters = [...stageEl.querySelectorAll('.ix-poster')], empty = stageEl.querySelector('.ix-empty'), tag = stageEl.querySelector('.ix-tag');
+const capL = document.getElementById('ix-cap-l'), capR = document.getElementById('ix-cap-r');
+const rows = [...document.querySelectorAll('#cats li')];
+
+const mask = (n, ok) => { if (ok) return n || ''; const p = String(n || '').trim().split(/\s+/); return p.length < 2 ? (p[0] || '') : p[0] + ' ' + p[p.length-1][0] + '.'; };
+const rootPath = (v, folder) => { v = String(v || '').trim(); if (!v) return ''; if (/^(data:|https?:)/.test(v)) return v; return v.startsWith('../') ? v.slice(3) : folder + '/' + v; };
+
+/* ---------- what each catalogue has to show ---------- */
+const CAT = await Promise.all(FOLDERS.map(f => fetch(f + '/projects.json', { cache:'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null)));
+const WORKS = CAT.map((list, ci) => {
+  if (!Array.isArray(list)) return [];
+  const f = FOLDERS[ci];
+  const toWork = p => {
+    const v = String(p.viewer || '').trim();
+    const src = /^https?:\/\/.+\.sog(\?.*)?$/i.test(v) ? v : /\.sog$/i.test(v) ? 'models/' + f + '/' + v.split('/').pop() : '';
+    return src ? { src, title:p.title || 'Untitled', by:mask(p.author, p.consent), note:[String(p.studio || '').split(/\s+[—–-]\s+/)[0].trim(), p.year].filter(Boolean).join(', '),
+                   poster:rootPath(p.poster, f), up:p.introUp || '-y', turn:Number(p.introTurn) || 0 } : null;
+  };
+  const ticked = list.filter(p => p.intro).map(toWork).filter(Boolean), rest = list.filter(p => !p.intro).map(toWork).filter(Boolean);
+  for (const a of [ticked, rest]) for (let i = a.length - 1; i > 0; i--){ const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+  return ticked.concat(rest);
+});
+rows.forEach((li, i) => { const n = Array.isArray(CAT[i]) ? CAT[i].length : 0; li.querySelector('[data-count]').textContent = n ? n + (n === 1 ? ' work' : ' works') : 'In preparation'; });
+
+/* ---------- renderer ---------- */
+let THREE, renderer, scene, camera;
+try {
+  THREE = await import(THREE_URL);
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:false, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75)); renderer.setClearColor(0x0E1112, 1);
+  scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(32, 1, .01, 50);
+} catch(e){ renderer = null; }                                            // no WebGL: thumbnails only
+
+function resize(){
+  if (!renderer) return;
+  const w = stageEl.clientWidth, h = stageEl.clientHeight; renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  for (const s of live) s.kit.setView(renderer.domElement.width, renderer.domElement.height);
+}
+new ResizeObserver(resize).observe(stageEl);
+
+/* ---------- scans: load, fit, show ---------- */
+const cache = new Map();                                                  // src -> Promise<{ kit, frame }>
+function loadScan(w){
+  if (!renderer) return Promise.reject(new Error('no webgl'));
+  if (!cache.has(w.src)) cache.set(w.src, (async () => {
+    const r = await fetch(w.src.startsWith('http') ? w.src : encodeURI(w.src)); if (!r.ok) throw new Error(r.status);
+    const S = await ATUSplat.readSOG(new Uint8Array(await r.arrayBuffer()), renderer); if (!S) throw new Error('sog');
+    const R = ATUSplat.orient(w.up, w.turn), { lo, hi } = ATUSplat.bounds(S, R);
+    const k = 1 / Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
+    const P = ATUSplat.prepare(S, { R, k, center:[(lo[0] + hi[0]) / 2, lo[1], (lo[2] + hi[2]) / 2] });
+    const kit = ATUSplat.createMesh(THREE, P, S);
+    const ht = (hi[1] - lo[1]) * k, dp = (hi[2] - lo[2]) * k, wd = (hi[0] - lo[0]) * k, flat = ht / Math.max(wd, dp);
+    return { kit, frame:{ h:ht, elev:flat < .3 ? .72 : flat < .6 ? .5 : .3 } };
+  })());
+  return cache.get(w.src);
+}
+
+let live = [];                                    // { kit, frame, grow, target } currently in the scene
+let active = -1, workIx = 0, token = 0, lastHover = 0, shown = null, since = performance.now();
+let rotY = .5, elev = 0, drag = null, userRot = 0;
+
+function setPoster(src){
+  const [a, b] = posters, on = a.classList.contains('on') ? a : b, off = on === a ? b : a;
+  if (!src){ on.classList.remove('on'); return; }
+  off.onload = () => { off.classList.add('on'); on.classList.remove('on'); };
+  off.src = src;
+}
+function caption(w, ci){
+  if (!w){ capL.textContent = ''; capR.textContent = ''; return; }
+  capL.innerHTML = ''; const b = document.createElement('b'); b.textContent = w.title; capL.append(b, document.createTextNode(w.by ? ', ' + w.by : ''));
+  capR.innerHTML = ''; const a = document.createElement('a'); a.href = CATALOGUES[ci].href; a.textContent = w.note || 'Open catalogue'; capR.append(a);
+}
+
+async function show(ci, wi){
+  const my = ++token, works = WORKS[ci];
+  rows.forEach((r, i) => r.classList.toggle('on', i === ci));
+  for (const s of live) s.target = 0;                                     // current scan dissolves away
+  if (!works.length){
+    shown = null; setPoster(''); canvas.classList.remove('on'); tag.style.opacity = 0; caption(null);
+    empty.querySelector('b').textContent = CATALOGUES[ci].name;
+    empty.querySelector('span').textContent = 'The first scans for this catalogue are in preparation.';
+    empty.classList.add('on'); return;
+  }
+  empty.classList.remove('on');
+  const w = works[wi % works.length]; caption(w, ci);
+  if (w.poster && !canvas.classList.contains('on')) setPoster(w.poster);   // thumbnail at once, if no live scan is up
+  let s;
+  try { s = await loadScan(w); }
+  catch(e){                                                               // missing or unreadable file: drop it and show the next work
+    if (my !== token) return;
+    works.splice(works.indexOf(w), 1); cache.delete(w.src);
+    return show(ci, wi);
+  }
+  if (my !== token) return;
+  live = live.filter(x => x !== s);
+  s.grow = s.grow || 0; s.target = 1; live.push(s);
+  if (!s.kit.mesh.parent) scene.add(s.kit.mesh);
+  s.kit.setView(renderer.domElement.width, renderer.domElement.height);
+  shown = s; tag.style.opacity = 1; since = performance.now();
+  requestAnimationFrame(() => { canvas.classList.add('on'); setTimeout(() => { if (my === token) setPoster(''); }, 900); });
+}
+
+function choose(ci){ if (ci === active) return; active = ci; workIx = 0; since = performance.now(); show(ci, 0); }
+rows.forEach((li, i) => {
+  const go = () => { lastHover = performance.now(); choose(i); };
+  li.addEventListener('pointerenter', go); li.addEventListener('focusin', go);
+});
+const first = WORKS.findIndex(w => w.length); choose(first < 0 ? 0 : first);
+
+// drag to turn
+canvas.addEventListener('pointerdown', e => { drag = { x:e.clientX, y:e.clientY, r:rotY, e:elev }; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => { if (!drag) return; rotY = drag.r + (e.clientX - drag.x) * .008; elev = Math.max(-.35, Math.min(.6, drag.e + (e.clientY - drag.y) * .005)); userRot = performance.now(); });
+const up = () => drag = null; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+
+/* ---------- loop ---------- */
+let visible = true, last = performance.now(), frameNo = 0;
+new IntersectionObserver(es => visible = es[0].isIntersecting).observe(stageEl);
+function tick(now){
+  requestAnimationFrame(tick);
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (!renderer || !visible || document.hidden) return;
+  // the chosen catalogue's works take turns, unless someone is interacting
+  if (document.documentElement.classList.contains('intro-open')) since = now;          // hold still until the intro has gone
+  if (!reduce && WORKS[active] && WORKS[active].length > 1 && now - since > CYCLE && now - lastHover > 4000 && now - userRot > 6000 && !drag){
+    since = now; workIx++; show(active, workIx);
+  }
+  if (!drag && now - userRot > 3000) rotY += dt * (reduce ? 0 : .16);
+  for (const s of live){ const sp = s.target > s.grow ? .75 : 1.3; s.grow += Math.sign(s.target - s.grow) * Math.min(Math.abs(s.target - s.grow), dt * sp); s.kit.uniforms.uGrow.value = s.grow; }
+  for (const s of live.filter(x => x.target === 0 && x.grow <= 0)){ scene.remove(s.kit.mesh); }
+  live = live.filter(x => x.target > 0 || x.grow > 0);
+  const f = shown ? shown.frame : { h:.6, elev:.3 };
+  const e = f.elev + elev, dist = 2.35;
+  camera.position.set(Math.sin(rotY) * Math.cos(e) * dist, f.h * .42 + Math.sin(e) * dist, Math.cos(rotY) * Math.cos(e) * dist);
+  camera.lookAt(0, f.h * .42, 0); camera.updateMatrixWorld();
+  if (frameNo++ % 2 === 0) for (const s of live) s.kit.sort(camera);
+  renderer.render(scene, camera);
+}
+if (renderer){ resize(); requestAnimationFrame(tick); }
+</script>
+
 
 <!-- ==========================================================================
      INTRO SPLASH — three.js. The ATU mark "trains" like a Gaussian splat,
@@ -356,6 +984,7 @@ async function startIntro(){
   window.__introStarted = true;
 
   const MOBILE = Math.min(innerWidth, innerHeight) < 700;
+  let splat = null, splatFade = 0;                          // the scan as true splats, once loaded
   const N = MOBILE ? 32000 : 70000;
   const RESOLVE = 1.6, LOGO_DONE = 4.3, MORPH_AT = 5.4;
   const H = (typeof HUB !== 'undefined') ? HUB : { title:'Design Archive', institution:'ATU Sligo', sub:'', logo:'logo.png' };
@@ -430,13 +1059,13 @@ async function startIntro(){
     uTime:{value:0}, uScanT:{value:-1}, uExit:{value:0}, uScale:{value:1},
     uMouse:{value:new THREE.Vector3(99,99,0)}, uMouseStr:{value:0},
     uColor:{value:new THREE.Vector3(...col)}, uAlpha:{value: dark ? 0.5 : 0.72},
-    uSizeStart:{value:0.05}, uSizeEnd:{value: MOBILE ? 0.02 : 0.017}
+    uSizeStart:{value:0.05}, uSizeEnd:{value: MOBILE ? 0.02 : 0.017}, uPts:{value:1}
   };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent:true, depthWrite:false, depthTest:false, blending:THREE.NormalBlending,
     vertexShader: `
       attribute vec3 aStart, aLogo; attribute vec4 aSeed, aScan; attribute float aSize;
-      uniform float uTime, uScanT, uExit, uScale, uMouseStr, uSizeStart, uSizeEnd, uAlpha;
+      uniform float uTime, uScanT, uExit, uScale, uMouseStr, uSizeStart, uSizeEnd, uAlpha, uPts;
       uniform vec3 uMouse, uColor;
       varying vec4 vCol; varying float vSharp;
       float ease(float x){ return x < .5 ? 4.*x*x*x : 1. - pow(-2.*x + 2., 3.) / 2.; }
@@ -463,7 +1092,7 @@ async function startIntro(){
         gl_PointSize = max(1., s * uScale / -mv.z);
         vec3 lc = uColor * (.82 + aSeed.w * .36);
         float la = mix(.1, 1., e) * uAlpha;
-        vCol = vec4(mix(lc, aScan.rgb, m), mix(la, aScan.a, m) * (1. - smoothstep(.25, 1., uExit)));
+        vCol = vec4(mix(lc, aScan.rgb, m), mix(la, aScan.a, m) * (1. - smoothstep(.25, 1., uExit)) * uPts);
         vSharp = mix(mix(1.6, 4.5, e), 3.1, m);
       }`,
     fragmentShader: `
@@ -490,6 +1119,7 @@ async function startIntro(){
     group.position.y = viewH * (wide ? 0.07 : 0.13);
     if (wide) camera.setViewOffset(W, Hh, -W * 0.19, 0, W, Hh); else camera.clearViewOffset();
     uniforms.uScale.value = renderer.domElement.height / (2 * tanH);
+    if (splat) splat.setView(renderer.domElement.width, renderer.domElement.height);
   }
   resize(); addEventListener('resize', resize);
 
@@ -507,8 +1137,14 @@ async function startIntro(){
     let buf;
     if (window.__FEATURE_SOG_B64 && !FEATURE.src.startsWith('http')){ const b = atob(window.__FEATURE_SOG_B64[FEATURE.src] || ''); if (!b) return false; buf = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) buf[i] = b.charCodeAt(i); }
     else { const r = await fetch(FEATURE.src.startsWith('http') ? FEATURE.src : encodeURI(FEATURE.src)); if (!r.ok) return false; buf = new Uint8Array(await r.arrayBuffer()); }
-    const s = await readSOG(buf, renderer);
-    if (!s) return false;
+    const S = await ATUSplat.readSOG(buf, renderer);             // full splats: points for the morph, true splats for the finish
+    if (!S) return false;
+    const s = { count:S.count, pos:S.pos, col:new Float32Array(S.count * 3), op:new Float32Array(S.count), size:new Float32Array(S.count) };
+    for (let i = 0; i < S.count; i++){
+      s.col[i*3] = S.col[i*4]; s.col[i*3+1] = S.col[i*4+1]; s.col[i*3+2] = S.col[i*4+2]; s.op[i] = S.col[i*4+3];
+      const a = S.scl[i*3], b = S.scl[i*3+1], c = S.scl[i*3+2], hi = Math.max(a, b, c), lo = Math.min(a, b, c);
+      s.size[i] = Math.sqrt(hi * (a + b + c - hi - lo));
+    }
     scanCount = s.count;
     el.querySelector('.intro-f-title').textContent = FEATURE.title || '';
     el.querySelector('.intro-f-by').textContent = [FEATURE.by, FEATURE.note].filter(Boolean).join(', ');
@@ -540,6 +1176,12 @@ async function startIntro(){
       seed[i*4+2] = Math.min(1, Math.max(0, (y + 0.9) / 2.0)) + Math.random() * 0.12;   // ground first
     }
     ['position','aScan','aSize','aSeed'].forEach(n => geo.attributes[n].needsUpdate = true);
+    // the same scan as true Gaussian splats, placed exactly where the points land; faded in once they arrive
+    try {
+      splat = ATUSplat.createMesh(THREE, ATUSplat.prepare(S, { R, k, center:c, offset:[0, 0.12, 0] }), S);
+      splat.uniforms.uAlpha.value = 0; splat.setView(renderer.domElement.width, renderer.domElement.height);
+      group.add(splat.mesh);
+    } catch(e){ splat = null; }
     return true;
   }
 
@@ -618,7 +1260,14 @@ async function startIntro(){
     if (ray.ray.intersectPlane(plane, hit)){ group.worldToLocal(hit); uniforms.uMouse.value.copy(hit); }
     uniforms.uMouseStr.value += ((pointerIn && ex === 0 ? 1 : 0) - uniforms.uMouseStr.value) * 0.06;
 
-    if (morphStart !== null && frameNo % 2 === 0) sortSplats(m);
+    // once the points have landed, cross-fade to the true splats; hand back to points for the exit burst
+    const dtF = Math.min(.05, (now - (frame.last || now)) / 1000); frame.last = now;
+    const wantSplat = splat && exitAt === null && st > 2.9 ? 1 : 0;
+    splatFade += Math.sign(wantSplat - splatFade) * Math.min(Math.abs(wantSplat - splatFade), dtF * (wantSplat ? .8 : 4));
+    uniforms.uPts.value = 1 - splatFade;
+    if (splat){ splat.uniforms.uAlpha.value = splatFade; splat.mesh.visible = splatFade > .002; }
+    camera.updateMatrixWorld(); group.updateMatrixWorld();
+    if (morphStart !== null && frameNo % 2 === 0){ if (splatFade < 1) sortSplats(m); if (splat && splatFade > 0) splat.sort(camera); }
     renderer.render(scene, camera);
     raf = requestAnimationFrame(frame);
   }
@@ -628,7 +1277,7 @@ async function startIntro(){
     cancelAnimationFrame(raf);
     removeEventListener('resize', resize); removeEventListener('pointermove', onMove); removeEventListener('pointerdown', onMove);
     removeEventListener('keydown', onKey); removeEventListener('wheel', onWheel);
-    geo.dispose(); mat.dispose(); renderer.dispose(); renderer.forceContextLoss();
+    geo.dispose(); mat.dispose(); if (splat) splat.dispose(); renderer.dispose(); renderer.forceContextLoss();
     el.remove(); root.classList.remove('intro-open');
   }
 
