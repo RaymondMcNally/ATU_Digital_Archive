@@ -179,5 +179,30 @@
     "intro": false,
     "introUp": "-y",
     "introTurn": 0
+  },
+  {
+    "author": "CRUTH",
+    "title": "Devaney Dairy Farm",
+    "type": "Site Context Model",
+    "year": "2025",
+    "studio": "CRUTH Research Project",
+    "viewer": "https://superspl.at/scene/5bea5fea",
+    "poster": "../posters/architecture/devaney-dairy-farm-cruth.jpg",
+    "caption": "Devany Dairy Farm",
+    "notes": "A demonstration of fixed focus on P1 camera. Oblique and Nidar capture at 50m.",
+    "consent": true,
+    "xr": false,
+    "featured": false,
+    "intro": false,
+    "introUp": "-y",
+    "introTurn": 0,
+    "scale": "1:1",
+    "size": "Drone Scan",
+    "materials": "Matrice 300 RTK P1 @ 50m",
+    "captured": "May 2025",
+    "method": "Drone Matrice 300 RTK P1 @ 50m",
+    "docs": [],
+    "docConsent": true,
+    "id": "devaney-dairy-farm-cruth"
   }
 ]
