@@ -41,7 +41,18 @@
     "notes": "Site Elevation Model",
     "consent": true,
     "xr": true,
-    "featured": false
+    "featured": false,
+    "intro": true,
+    "introUp": "-y",
+    "introTurn": 0,
+    "scale": "1:50",
+    "size": "300mmx300mmx300mm",
+    "materials": "Layered 5mm MDF with Cork Board and 3D printed car.",
+    "captured": "May 2026",
+    "method": "LCC Scan/Superspl",
+    "docs": [],
+    "docConsent": false,
+    "id": "sligo-transportation-hub-li-ling"
   },
   {
     "author": "Year 1 2025/2026",
