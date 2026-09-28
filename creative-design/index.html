@@ -167,6 +167,26 @@
   .doc-row button{appearance:none;border:0;background:none;color:#B23A48;font:inherit;font-size:13px;cursor:pointer;padding:4px}
   .doc-add{display:flex;gap:8px;flex-wrap:wrap}
   .doc-add input[type=text]{flex:1;min-width:160px;margin:0}
+  /* prev / next, share, cite */
+  .v-head{display:flex;align-items:center;gap:14px;min-width:0}
+  .v-nav{display:flex;gap:6px}
+  .v-nav .v-btn{padding:7px 11px;font-size:15px;line-height:1}
+  .v-btn:disabled{opacity:.35;cursor:default}
+  .v-pos{font-size:12.5px;color:#8B9092;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .share-pop{position:absolute;right:20px;top:58px;z-index:8;width:min(340px,calc(100vw - 32px));background:#16191A;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:18px;color:#E8E8E6;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
+  .share-pop.on{display:block}
+  .share-pop h4{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:15px}
+  .share-row{display:flex;gap:8px}
+  .share-row input{flex:1;min-width:0;background:#0C0E0F;border:1px solid rgba(255,255,255,.16);color:#D7D9D9;border-radius:4px;padding:7px 9px;font:inherit;font-size:13px}
+  .share-qr{margin:14px 0 10px;background:#fff;border-radius:6px;padding:12px;display:grid;place-items:center;min-height:120px;color:#63696B;font-size:13px}
+  .share-qr img{width:180px;height:180px;image-rendering:pixelated;display:block}
+  .share-acts{display:flex;gap:8px;flex-wrap:wrap}
+  .share-note{font-size:12px;color:#8B9092;margin:10px 0 0}
+  .r-cite-h{font-size:12.5px;color:#7E8385;margin:0 0 8px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center}
+  .r-cite-h button{appearance:none;background:none;border:1px solid rgba(255,255,255,.18);color:#D7D9D9;border-radius:4px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer}
+  .r-cite{font-size:13.5px;line-height:1.6;color:#C9CCCD;margin:0 0 18px;word-break:break-word}
+  .r-cite i{font-style:italic}
+  @media (max-width:760px){ .v-actions{gap:6px} .v-btn{padding:6px 9px;font-size:13px} .v-pos{display:none} .viewer-bar{flex-wrap:wrap} }
   .r-notes-h{font-size:12.5px;color:#7E8385;margin:0 0 8px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
   .r-notes{font-size:14.5px;line-height:1.62;color:#C9CCCD;margin:0;white-space:pre-wrap}
   .r-notes.empty-note{color:#6C7173;font-style:italic}
@@ -358,6 +378,15 @@
         </div>
 
         <div class="field"><label>Caption <span style="color:var(--slate)">(lead plate only)</span></label><input type="text" id="f-caption"></div>
+        <div class="field row2">
+          <div><label>Scale</label><input type="text" id="f-scale" placeholder="e.g. 1:200"></div>
+          <div><label>Model size</label><input type="text" id="f-size" placeholder="e.g. 600 × 400 × 250 mm"></div>
+        </div>
+        <div class="field"><label>Materials</label><input type="text" id="f-materials" placeholder="e.g. Greyboard, basswood, 3D-printed PLA"></div>
+        <div class="field row2">
+          <div><label>Captured</label><input type="text" id="f-captured" placeholder="e.g. May 2026"></div>
+          <div><label>Capture method</label><input type="text" id="f-method" placeholder="e.g. iPhone, LCC Scan"></div>
+        </div>
         <div class="field"><label>Teaching notes</label><textarea id="f-notes" placeholder="Shown in the viewer's Notes panel."></textarea></div>
         <div class="field" id="doc-field">
           <label>Documents</label>
@@ -407,12 +436,24 @@
 <!-- viewer -->
 <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="v-title">
   <div class="viewer-bar">
-    <div><div class="v-title" id="v-title">—</div><div class="v-sub" id="v-sub"></div></div>
+    <div class="v-head">
+      <div class="v-nav"><button class="v-btn" id="v-prev" aria-label="Previous work" title="Previous work (left arrow)">&larr;</button><button class="v-btn" id="v-next" aria-label="Next work" title="Next work (right arrow)">&rarr;</button></div>
+      <div style="min-width:0"><div class="v-title" id="v-title">—</div><div class="v-sub" id="v-sub"></div></div>
+      <span class="v-pos" id="v-pos"></span>
+    </div>
     <div class="v-actions">
+      <button class="v-btn" id="v-share" aria-expanded="false">Share</button>
       <button class="v-btn" id="v-bg" aria-pressed="false" title="Switch the scene background between dark and white">White background</button>
       <button class="v-btn" id="v-info" aria-pressed="true">Notes</button>
       <button class="v-btn" id="v-close" aria-label="Close viewer">Close</button>
     </div>
+  </div>
+  <div class="share-pop" id="share-pop" role="dialog" aria-label="Share this work">
+    <h4>Share this work</h4>
+    <div class="share-row"><input type="text" id="share-url" readonly aria-label="Link to this work"><button type="button" class="v-btn" id="share-copy">Copy</button></div>
+    <div class="share-qr" id="share-qr">Making QR code&hellip;</div>
+    <div class="share-acts"><button type="button" class="v-btn" id="share-dl">Download QR code</button><button type="button" class="v-btn" id="share-native" hidden>Share&hellip;</button></div>
+    <p class="share-note">The QR code opens this work directly. Print it for plinths, posters or crit sheets.</p>
   </div>
   <div class="viewer-body">
     <div class="viewer-stage" id="v-stage"></div>
@@ -596,7 +637,7 @@ function card(p,featured){
 }
 function render(){
   syncFilters();
-  results.innerHTML='';
+  results.innerHTML=''; VISIBLE=[];
   const list=DATA.filter(matches);
   if(!isDefault()){
     statusEl.classList.add('on');
@@ -606,17 +647,17 @@ function render(){
   if(list.length===0){ results.innerHTML=`<div class="empty"><h3>No models match</h3><p>Try a different student name, model type or year — or clear the filters to see everything.</p></div>`; return; }
   if(isDefault()){
     const feat=DATA.find(p=>p.featured);
-    if(feat){ const lead=document.createElement('div'); lead.className='grid lead'; lead.appendChild(card(feat,true)); results.appendChild(lead); }
+    if(feat){ const lead=document.createElement('div'); lead.className='grid lead'; lead.appendChild(card(feat,true)); results.appendChild(lead); VISIBLE.push(feat); }
     typesInOrder().forEach(type=>{
       const items=DATA.filter(p=>p.type===type&&!p.featured);
       if(!items.length) return;
       const sec=document.createElement('section'); sec.className='collection';
       sec.innerHTML=`<div class="collection-head"><h2>${esc(type)} models</h2><span class="c-count">${items.length}</span></div>`;
       const g=document.createElement('div'); g.className='grid';
-      items.forEach(p=>g.appendChild(card(p,false)));
+      items.forEach(p=>{ g.appendChild(card(p,false)); VISIBLE.push(p); });
       sec.appendChild(g); results.appendChild(sec);
     });
-  } else { const g=document.createElement('div'); g.className='grid'; list.forEach(p=>g.appendChild(card(p,false))); results.appendChild(g); }
+  } else { const g=document.createElement('div'); g.className='grid'; list.forEach(p=>{ g.appendChild(card(p,false)); VISIBLE.push(p); }); results.appendChild(g); }
 }
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function maskName(name,consent){ if(consent) return name; const p=String(name||'').trim().split(/\s+/); return p.length<2?(p[0]||''):p[0]+' '+p[p.length-1][0]+'.'; }
@@ -764,8 +805,101 @@ function docsPanel(p){
 }
 vRail.addEventListener('click', e => { const b = e.target.closest('[data-doc]'); if (b && vProject) openDoc((vProject.docs || []).filter(d => d.src)[+b.dataset.doc]); });
 
-function openViewer(p,trigger){
-  lastFocused=trigger||document.activeElement;
+/* ==========================================================================
+   Direct links (#work/<id>), previous / next, share + QR, cite this work
+   ========================================================================== */
+let VISIBLE = [];                                                          // works in the order shown on the page
+const workId = p => p.id || slug(`${p.title}-${p.author}`);
+const workURL = p => location.href.split('#')[0] + '#work/' + workId(p);
+const hashWork = () => { const m = location.hash.match(/^#work\/(.+)$/); return m ? decodeURIComponent(m[1]) : null; };
+let pushedWork = false;
+
+function navList(){ return VISIBLE.length ? VISIBLE : DATA; }
+function syncNav(){
+  const L = navList(), i = L.indexOf(vProject);
+  $('v-prev').disabled = i <= 0; $('v-next').disabled = i < 0 || i >= L.length - 1;
+  $('v-pos').textContent = i >= 0 && L.length > 1 ? `${i + 1} of ${L.length}` : '';
+}
+function step(d){ const L = navList(), i = L.indexOf(vProject); const q = L[i + d]; if (q) openViewer(q, lastFocused, true); }
+$('v-prev').onclick = () => step(-1); $('v-next').onclick = () => step(1);
+viewer.addEventListener('keydown', e => {
+  if (reader.classList.contains('on') || /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ''))) return;
+  if (e.key === 'ArrowLeft'){ e.preventDefault(); step(-1); }
+  if (e.key === 'ArrowRight'){ e.preventDefault(); step(1); }
+});
+
+/* keep the address in step with the viewer, so links, bookmarks and Back all work */
+function setWorkHash(p, replace){
+  const h = '#work/' + encodeURIComponent(workId(p));
+  if (location.hash === h) return;
+  if (replace || pushedWork) history.replaceState(null, '', h); else { history.pushState(null, '', h); pushedWork = true; }
+}
+function clearWorkHash(){
+  if (!hashWork()) return;
+  if (pushedWork){ pushedWork = false; history.back(); } else history.replaceState(null, '', location.pathname + location.search);
+}
+function openFromHash(){
+  const id = hashWork();
+  if (!id){ if (viewer.classList.contains('on')) closeViewer(true); return; }
+  const p = DATA.find(x => workId(x) === id);
+  if (p && vProject !== p) openViewer(p, null, true, true);
+}
+window.addEventListener('popstate', () => { pushedWork = false; openFromHash(); });
+
+/* share: link, QR code (drawn with a small library, loaded on first use), native share on phones */
+let qrLib = null;
+function loadQR(){ return qrLib || (qrLib = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = () => res(window.qrcode); s.onerror = rej; document.head.appendChild(s); })); }
+async function qrCanvas(p, scale){
+  const QR = await loadQR(), q = QR(0, 'M'); q.addData(workURL(p)); q.make();
+  const n = q.getModuleCount(), pad = 4, px = scale, W = (n + pad * 2) * px, cap = Math.round(px * 9);
+  const c = document.createElement('canvas'); c.width = W; c.height = W + cap; const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#17191A';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect((k + pad) * px, (r + pad) * px, px, px);
+  g.textAlign = 'center'; g.font = `600 ${Math.round(px * 2.6)}px Arial, sans-serif`;
+  g.fillText(String(p.title).slice(0, 40), W / 2, W + px * 2.2);
+  g.font = `${Math.round(px * 2)}px Arial, sans-serif`; g.fillStyle = '#63696B';
+  g.fillText('ATU Library, Design Archive', W / 2, W + px * 5.4);
+  return c;
+}
+const sharePop = $('share-pop'), shareBtn = $('v-share');
+function closeShare(){ sharePop.classList.remove('on'); shareBtn.setAttribute('aria-expanded', 'false'); }
+shareBtn.onclick = async () => {
+  if (sharePop.classList.contains('on')) return closeShare();
+  const p = vProject; if (!p) return;
+  $('share-url').value = workURL(p); sharePop.classList.add('on'); shareBtn.setAttribute('aria-expanded', 'true');
+  $('share-native').hidden = !navigator.share;
+  const box = $('share-qr'); box.textContent = 'Making QR code…';
+  try { const c = await qrCanvas(p, 6); const img = new Image(); img.alt = 'QR code for this work'; img.src = c.toDataURL('image/png'); box.innerHTML = ''; box.appendChild(img); }
+  catch(e){ box.textContent = 'The QR code could not be made. The link above still works.'; }
+};
+$('share-copy').onclick = async () => { const i = $('share-url'); try { await navigator.clipboard.writeText(i.value); } catch(e){ i.select(); document.execCommand('copy'); } $('share-copy').textContent = 'Copied'; setTimeout(() => $('share-copy').textContent = 'Copy', 1500); };
+$('share-dl').onclick = async () => { const p = vProject; if (!p) return; try { const c = await qrCanvas(p, 16); const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = `qr-${workId(p)}.png`; a.click(); } catch(e){} };
+$('share-native').onclick = () => { const p = vProject; if (p && navigator.share) navigator.share({ title:p.title, text:`${p.title}, ATU Library Design Archive`, url:workURL(p) }).catch(() => {}); };
+document.addEventListener('click', e => { if (sharePop.classList.contains('on') && !sharePop.contains(e.target) && e.target !== shareBtn) closeShare(); });
+
+/* cite this work (Harvard style); the name follows the student's consent choice */
+function citation(p){
+  const parts = String(p.author || '').trim().split(/\s+/).filter(Boolean);
+  let who = '';
+  if (parts.length){
+    if (p.consent && parts.length > 1) who = `${parts[parts.length - 1]}, ${parts.slice(0, -1).map(x => x[0] + '.').join(' ')}`;
+    else who = maskName(p.author, p.consent);
+  }
+  const yr = p.year ? `(${p.year})` : '(n.d.)', studio = p.studio ? ` ${String(p.studio).split(/\s+[—–-]\s+/)[0].trim()}.` : '';
+  const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  return { html:`${esc(who)} ${esc(yr)} <i>${esc(p.title)}</i> [3D scan].${esc(studio)} ATU Library, Design Archive. Available at: ${esc(workURL(p))} (Accessed: ${esc(today)}).`,
+           text:`${who} ${yr} ${p.title} [3D scan].${studio} ATU Library, Design Archive. Available at: ${workURL(p)} (Accessed: ${today}).` };
+}
+function citePanel(p){ return `<p class="r-cite-h">Cite this work <button type="button" data-cite>Copy</button></p><p class="r-cite">${citation(p).html}</p>`; }
+vRail.addEventListener('click', async e => {
+  const b = e.target.closest('[data-cite]'); if (!b || !vProject) return;
+  try { await navigator.clipboard.writeText(citation(vProject).text); b.textContent = 'Copied'; } catch(err){ b.textContent = 'Select and copy'; }
+  setTimeout(() => b.textContent = 'Copy', 1500);
+});
+
+function openViewer(p,trigger,stepping,fromHash){
+  if(!stepping) lastFocused=trigger||document.activeElement;
+  closeShare(); reader.classList.remove('on'); rFrame.src='about:blank';
   $('v-title').textContent=p.title;
   $('v-sub').textContent=[maskName(p.author,p.consent),p.type,p.year].filter(Boolean).join('  ·  ');
   vStage.innerHTML='';
@@ -773,14 +907,15 @@ function openViewer(p,trigger){
   if(p.viewer){ const f=document.createElement('iframe'); f.src=resolveViewer(p.viewer,vBg); f.allow='fullscreen; xr-spatial-tracking'; f.title=`${p.title} — 3D viewer`; vStage.appendChild(f); }
   else vStage.innerHTML=`<div class="v-empty"><h3>This plate isn't linked to a viewer yet</h3><p>Open the admin, edit this project, and add its <code>superspl.at</code> scene link.</p></div>`;
   if(p.viewer && p.xr) vStage.insertAdjacentHTML('beforeend',`<div class="vr-flag" title="VR-ready — put on a WebXR headset and use the viewer's VR button">${VR_ICON}<span>VR ready</span></div>`);
-  const meta=[['Type',p.type],['Year',p.year],['Studio',p.studio]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('');
-  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl>${docsPanel(p)}<p class="r-notes-h">Teaching notes</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
+  const meta=[['Type',p.type],['Year',p.year],['Studio',p.studio],['Scale',p.scale],['Size',p.size],['Materials',p.materials],['Captured',[p.captured,p.method].filter(Boolean).join(', ')]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('');
+  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl>${docsPanel(p)}${citePanel(p)}<p class="r-notes-h">Teaching notes</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
   infoOpen=window.innerWidth>760; applyInfo();
-  viewer.classList.add('on'); document.body.style.overflow='hidden'; $('v-close').focus();
+  viewer.classList.add('on'); document.body.style.overflow='hidden'; if(!stepping) $('v-close').focus();
+  syncNav(); if(!fromHash) setWorkHash(p, stepping);
 }
-function closeViewer(){ reader.classList.remove('on'); rFrame.src='about:blank'; viewer.classList.remove('on'); vStage.innerHTML=''; vRail.innerHTML=''; document.body.style.overflow=''; if(lastFocused) lastFocused.focus(); }
-$('v-close').onclick=closeViewer;
-viewer.addEventListener('keydown',e=>{ if(e.key==='Escape') closeViewer(); });
+function closeViewer(fromHash){ closeShare(); if(fromHash!==true) clearWorkHash(); vProject=null; reader.classList.remove('on'); rFrame.src='about:blank'; viewer.classList.remove('on'); vStage.innerHTML=''; vRail.innerHTML=''; document.body.style.overflow=''; if(lastFocused) lastFocused.focus(); }
+$('v-close').onclick=()=>closeViewer();
+viewer.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(sharePop.classList.contains('on')) closeShare(); else if(reader.classList.contains('on')){ reader.classList.remove('on'); rFrame.src='about:blank'; } else closeViewer(); } });
 
 /* ==========================================================================
    Admin — form, list, import/export
@@ -862,9 +997,11 @@ $('proj-form').addEventListener('submit',e=>{
     poster:normPoster(pendingThumb), caption:$('f-caption').value.trim(),
     notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked, bg:$('f-bg').value||undefined,
     intro:$('f-intro').checked, introUp:$('f-intro-up').value, introTurn:Number($('f-intro-turn').value),
+    scale:$('f-scale').value.trim(), size:$('f-size').value.trim(), materials:$('f-materials').value.trim(), captured:$('f-captured').value.trim(), method:$('f-method').value.trim(),
     docs:formDocs.filter(d=>d.src).map(d=>({ ...d, label:(d.label||'').trim()||'Document' })), docConsent:$('f-docconsent').checked
   };
   if(!p.author||!p.title){ return; }
+  { const prev=editIndex===null?null:DATA[editIndex]; p.id=(prev&&prev.id)||workId(prev||p); let n=2; const base=p.id; while(DATA.some((x,i)=>i!==editIndex&&workId(x)===p.id)) p.id=`${base}-${n++}`; }   // a stable address for this work
   if(p.featured) DATA.forEach(x=>x.featured=false);
   if(editIndex===null) DATA.push(p); else DATA[editIndex]=p;
   save(); resetForm(); rebuildFilters(); render(); renderAdmin();
@@ -881,6 +1018,7 @@ function editProject(i){
   $('f-author').value=p.author||''; $('f-title').value=p.title||'';
   $('f-type').value=p.type||''; $('f-year').value=p.year||'';
   $('f-studio').value=p.studio||''; vwr.value=p.viewer||'';
+  $('f-scale').value=p.scale||''; $('f-size').value=p.size||''; $('f-materials').value=p.materials||''; $('f-captured').value=p.captured||''; $('f-method').value=p.method||'';
   $('f-caption').value=p.caption||''; $('f-notes').value=p.notes||'';
   $('f-featured').checked=!!p.featured; $('f-consent').checked=!!p.consent; $('f-xr').checked=!!p.xr; $('f-bg').value=p.bg==='white'?'white':''; checkSize(p.viewer||'');
   formDocs=(p.docs||[]).map(d=>({ ...d })); renderDocRows(); $('f-docconsent').checked=!!p.docConsent;
@@ -1060,6 +1198,7 @@ $('publish-btn').onclick=async()=>{
   DATA = (Array.isArray(data)&&data.length)?data:SAMPLE.slice();
   rebuildFilters(); render();
   goAdmin(location.hash==='#admin');
+  openFromHash();
 })();
 </script>
 </body>
