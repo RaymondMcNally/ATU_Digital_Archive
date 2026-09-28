@@ -108,7 +108,7 @@
   {
     "author": "Patrick",
     "title": "School of Music",
-    "type": "Concept",
+    "type": "Concept Model",
     "year": "2024/25",
     "studio": "Studio 5",
     "viewer": "Concept Model.sog",
@@ -117,7 +117,18 @@
     "notes": "A beautiful example of a concept model demonstrating the multi layered approach to the site context captured in a single model.",
     "consent": true,
     "xr": true,
-    "featured": false
+    "featured": false,
+    "intro": true,
+    "introUp": "-y",
+    "introTurn": 0,
+    "scale": "1:200",
+    "size": "400x200x200mm",
+    "materials": "Black MDF with copper wire and acrylic plastic",
+    "captured": "May 2024",
+    "method": "LCC Scan",
+    "docs": [],
+    "docConsent": false,
+    "id": "school-of-music-patrick"
   },
   {
     "author": "TBC",
@@ -131,19 +142,6 @@
     "notes": "Allmannajuvet, with its characteristic landscape and rich cultural history, is one of the 10 largest attractions along the National Tourist Routes. In 2002, world- renowned architect Peter Zumthor was commissioned by the Norwegian Public Roads Administration to design a tourist route attraction for the purpose of welcoming visitors and bringing the old mining history of Sauda back to life. The simplistic buildings are inspired by the mining operation, the drudgery and the workers’ strenuous everyday lives. The installation consists of a museum building, a café building, toilet and parking facilities, paths and stairs.\nAll the buildings were prefabricated in Saudasjøen and then assembled in Allmannajuvet. The exterior support system consists of creosote impregnated laminated wood. The exterior walls of the building consist of 18 mm plywood sheets and jute burlap, coated with a German acrylic material (PMMA).",
     "consent": true,
     "xr": true,
-    "featured": false
-  },
-  {
-    "author": "Ray McNally",
-    "title": "Devany Farm",
-    "type": "Drone Model",
-    "year": "2025/26",
-    "studio": "CRUTH",
-    "viewer": "Devaney Farm Sligo.sog",
-    "poster": "../posters/architecture/devany-farm-ray-mcnally.jpg",
-    "caption": "Devaney Farm",
-    "notes": "Aerial capture with Matrice 300 with P1 payload flown at 30m, Oblique & Lidar Grid.",
-    "consent": true,
     "featured": false
   },
   {
