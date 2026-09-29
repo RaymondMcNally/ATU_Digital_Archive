@@ -40,7 +40,7 @@
     "type": "Exhibition",
     "year": "2025/26",
     "studio": "Masters in Creative Writing",
-    "viewer": "https://superspl.at/scene/1a570b2f",
+    "viewer": "Masters in Creative WritingMasters in Creative Writing.sog",
     "poster": "../posters/creative-design/inner-child-edward.jpg",
     "caption": "Inner Child",
     "notes": "",
@@ -49,8 +49,14 @@
     "featured": true,
     "intro": true,
     "introUp": "-y",
-    "introTurn": 0,
+    "introTurn": 90,
+    "scale": "",
+    "size": "",
+    "materials": "",
+    "captured": "",
+    "method": "",
     "docs": [],
-    "docConsent": true
+    "docConsent": true,
+    "id": "inner-child-edward"
   }
 ]
