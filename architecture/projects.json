@@ -2,13 +2,13 @@
   {
     "author": "Aibhainn Mulligan",
     "title": "Sustainability",
-    "type": "Site Context Model",
+    "type": "Site Context",
     "year": "2024/25",
     "studio": "Studio 5 — Public Buildings",
     "viewer": "Site Model.sog",
     "poster": "../posters/architecture/sustainability-aibhainn-mulligan.jpg",
-    "caption": "A timber study model exploring the space between street and courtyard.",
-    "notes": "Strong parti: the courtyard reads as the organising void.",
+    "caption": "",
+    "notes": "",
     "consent": true,
     "xr": true,
     "featured": false,
@@ -57,7 +57,7 @@
   {
     "author": "Year 1 2025/2026",
     "title": "Ballymote",
-    "type": "Site Context Model",
+    "type": "Site Context",
     "year": "2025/26",
     "studio": "Studio 1 — Dwelling",
     "viewer": "Ballymote Site Model.sog",
@@ -74,7 +74,7 @@
   {
     "author": "MAGA",
     "title": "Student Housing",
-    "type": "Sectional Model",
+    "type": "Sectional",
     "year": "2025/26",
     "studio": "Studio 5 — Student Housing",
     "viewer": "5th Year Student Housing.sog",
@@ -108,7 +108,7 @@
   {
     "author": "Patrick",
     "title": "School of Music",
-    "type": "Concept Model",
+    "type": "Concept",
     "year": "2024/25",
     "studio": "Studio 5",
     "viewer": "Concept Model.sog",
@@ -147,7 +147,7 @@
   {
     "author": "Year 1",
     "title": "Concept Model",
-    "type": "Concept Model",
+    "type": "Concept",
     "year": "2026",
     "studio": "Studio 1",
     "viewer": "Student Concept Model.sog",
@@ -164,7 +164,7 @@
   {
     "author": "CRUTH",
     "title": "Sligo Harbour",
-    "type": "Site Context Model",
+    "type": "Site Context",
     "year": "2026",
     "studio": "Studio 3 - Site",
     "viewer": "https://superspl.at/scene/cbb1644c",
@@ -181,13 +181,13 @@
   {
     "author": "CRUTH",
     "title": "Devaney Dairy Farm",
-    "type": "Site Context Model",
+    "type": "Site Context",
     "year": "2025",
     "studio": "CRUTH Research Project",
     "viewer": "https://superspl.at/scene/5bea5fea",
     "poster": "../posters/architecture/devaney-dairy-farm-cruth.jpg",
-    "caption": "Devany Dairy Farm",
-    "notes": "A demonstration of fixed focus on P1 camera. Oblique and Nidar capture at 50m.",
+    "caption": "Devaney Dairy Farm",
+    "notes": "A demonstration of fixed focus on P1 camera. Oblique and Lidar capture at 50m.",
     "consent": true,
     "xr": false,
     "featured": false,
@@ -204,7 +204,7 @@
     "id": "devaney-dairy-farm-cruth"
   },
   {
-    "author": "vekarsh sagayamoorthy",
+    "author": "Vekarsh Sagayamoorthy",
     "title": "Ballisodare Site Analysis",
     "type": "Concept",
     "year": "2026/2027",
