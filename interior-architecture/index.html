@@ -366,7 +366,7 @@
         <div class="field">
           <label>Model — just the .sog filename (or a viewer URL / superspl.at link)</label>
           <input type="text" id="f-viewer" placeholder="e.g. model-name.sog">
-          <p class="hint">Type only the <b>.sog</b> filename — the file must sit in this catalogue's <code>models</code> folder, and it opens in your own viewer automatically. A full viewer URL or superspl.at link also works. The live model loads below so you can frame a thumbnail.</p>
+          <p class="hint">Type only the <b>.sog</b> filename — the file must sit in this catalogue's <code>models</code> folder, and it opens in your own viewer automatically. For a large streamed scan, type its folder and <code>lod-meta.json</code>, e.g. <code>the-mall/lod-meta.json</code>. A full viewer URL or superspl.at link also works. The live model loads below so you can frame a thumbnail.</p>
           <div class="preview-embed" id="preview-embed">
             <iframe id="preview-frame" allow="fullscreen; xr-spatial-tracking" title="Model preview"></iframe>
             <div class="cap">Frame your best view, take a screenshot, and drop it in the thumbnail below.</div>
@@ -501,6 +501,10 @@ function resolveViewer(v,bg){
   const ss=s.match(/^https?:\/\/(?:www\.)?superspl\.at\/(?:scene\/|s\?id=|view\?id=)([A-Za-z0-9]+)/i);
   if(ss) return `https://superspl.at/s?id=${ss[1]}`;                        // superspl.at scene page -> its bare embed viewer
   if(/^https?:\/\//i.test(s)) return s;                      // any other full URL as-is
+  if(/(^|\/)(lod-)?meta\.json$/i.test(s)){                  // a streamed scan: <folder>/lod-meta.json inside the models folder
+    const rel=s.split('/').slice(-2).join('/');
+    return `${VIEWER_BASE}?content=${(MODELS_BASE+rel).replace(/ /g,'%20')}${VIEWER_PARAMS}${bg==='white'?'&settings=settings-white.json':''}`;
+  }
   if(/(\.sog|\.compressed\.ply|\.ply)$/i.test(s)){          // a scene file in ANY path form
     const name=s.split('/').pop();                            // -> use just the filename
     return `${VIEWER_BASE}?content=${(MODELS_BASE+name).replace(/ /g,'%20')}${VIEWER_PARAMS}${bg==='white'?'&settings=settings-white.json':''}`;
@@ -653,7 +657,7 @@ vInfoBtn.onclick=()=>{ infoOpen=!infoOpen; applyInfo(); };
 /* background switch: only for scans hosted here (a superspl.at link keeps its own settings) */
 let vProject=null, vBg='dark';
 const vBgBtn=$('v-bg');
-const isLocalScan=v=>!!v && !/^https?:\/\//i.test(v.trim()) && /(\.sog|\.compressed\.ply|\.ply)$/i.test(v.trim());
+const isLocalScan=v=>!!v && !/^https?:\/\//i.test(v.trim()) && /(\.sog|\.compressed\.ply|\.ply|(^|\/)(lod-)?meta\.json)$/i.test(v.trim());
 function syncBgBtn(){
   const ok=vProject && isLocalScan(vProject.viewer);
   vBgBtn.style.display=ok?'':'none';
