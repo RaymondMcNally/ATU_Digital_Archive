@@ -100,10 +100,18 @@
     "notes": "",
     "consent": true,
     "xr": false,
-    "featured": false,
-    "intro": false,
+    "featured": true,
+    "intro": true,
     "introUp": "-y",
-    "introTurn": 0
+    "introTurn": 0,
+    "scale": "",
+    "size": "",
+    "materials": "",
+    "captured": "",
+    "method": "",
+    "docs": [],
+    "docConsent": false,
+    "id": "optimism-at-the-edge-5th-year-studio"
   },
   {
     "author": "Patrick",
