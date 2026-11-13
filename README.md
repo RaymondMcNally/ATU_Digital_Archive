@@ -44,3 +44,6 @@ organised into catalogues. Static site — no backend required.
 - Model types are short names ("Concept", "Site Context"); the pages add the word "model".
 - Catalogue pages show one continuous grid; set GROUP_BY_TYPE = true at the top of a
   catalogue's index.html for a headed section per type.
+- Large scans can be streamed: a folder in models/<catalogue>/ holding lod-meta.json and its
+  chunk folders (made with PlayCanvas splat-transform). Put "<folder>/lod-meta.json" in the
+  Model field, e.g. the-mall/lod-meta.json.
