@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interior Architecture — ATU Sligo</title>
+<title>Interior Architecture — Design Archive, ATU Sligo</title>
+<meta name="description" content="Spatial, material and furniture studies captured as explorable 3D scenes.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Interior Architecture — Design Archive, ATU Sligo">
+<meta property="og:description" content="Spatial, material and furniture studies captured as explorable 3D scenes.">
+<link rel="icon" type="image/png" href="../logo.png">
 
 <!-- ==========================================================================
      ARCHITECTURE MODEL ARCHIVE — 3D Gaussian Splat gallery + admin
@@ -286,7 +291,7 @@
     <div class="sheet">
       <div class="titleblock">
         <div>
-          <p class="institution"><a href="../index.html" style="color:var(--teal)">← Design Archive</a><br>ATU Sligo · School of the Built Environment &amp; Design</p>
+          <p class="institution"><a href="../index.html" style="color:var(--teal)">← Design Archive</a><br>Atlantic Technological University · Library</p>
           <h1 class="collection-name" id="collection-name">Architecture Model Archive</h1>
         </div>
         <p class="index-meta">Sheet A—01<br><b id="count-label">0</b> models</p>
@@ -387,7 +392,7 @@
           <div><label>Captured</label><input type="text" id="f-captured" placeholder="e.g. May 2026"></div>
           <div><label>Capture method</label><input type="text" id="f-method" placeholder="e.g. iPhone, LCC Scan"></div>
         </div>
-        <div class="field"><label>Teaching notes</label><textarea id="f-notes" placeholder="Shown in the viewer's Notes panel."></textarea></div>
+        <div class="field"><label>About this work (public)</label><textarea id="f-notes" placeholder="Shown publicly in the viewer's Notes panel."></textarea></div>
         <div class="field" id="doc-field">
           <label>Documents</label>
           <p class="hint" style="margin-top:0">Thesis, drawing sets, sketchbooks. Each appears as a button in the viewer's Notes panel.</p>
@@ -402,7 +407,7 @@
           <label class="check" style="margin-top:12px"><input type="checkbox" id="f-docconsent"> Student has agreed to publish these documents</label>
           <p class="hint">Documents stay hidden on the public pages until this is ticked.</p>
         </div>
-        <div class="field"><label class="check"><input type="checkbox" id="f-consent"> Show the student's full name publicly</label><p class="hint">Off = public pages show first name + initial only. The full name is always kept here for your records.</p></div>
+        <div class="field"><label class="check"><input type="checkbox" id="f-consent"> Show the student's full name publicly</label><p class="hint">Off = only first name + initial is published; the full name is left out of the public projects.json and stays in this browser's working copy only, so keep your own record of the student's name and consent.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-xr"> Suitable for VR / XR viewing</label><p class="hint" id="xr-hint">Adds a VR badge and a headset symbol on the viewer. Leave off for large scenes that run poorly in a headset.</p></div>
         <div class="field"><label for="f-bg">Viewer background</label><select id="f-bg"><option value="">Dark (default)</option><option value="white">White</option></select><p class="hint">The background a visitor sees first when they open this scan. They can still switch it in the viewer. Applies to .sog files in this catalogue, not superspl.at links.</p></div>
         <div class="field"><label class="check"><input type="checkbox" id="f-featured"> Feature as the lead plate</label></div>
@@ -471,6 +476,7 @@ const SITE = {
   footer:"Interior Architecture · ATU Sligo",
   logo:"../logo.png"
 };
+const GROUP_BY_TYPE = false;   // true = a headed section per model type; false = one continuous grid in type order
 const COLLECTIONS = ["Concept", "Spatial", "Material", "Furniture", "Detail"];
 
 /* Self-hosted viewer. Point this at YOUR copy of the SuperSplat viewer bundle
@@ -502,43 +508,8 @@ function resolveViewer(v,bg){
   return s;                                                    // an already-built viewer path (index.html)
 }
 
-/* Fallback seed — used only if projects.json is absent and nothing is saved yet.
-   Once you Export projects.json and upload it, that file becomes the source. */
-const SAMPLE = [
-  {
-    "title": "Room in Section",
-    "author": "Cara Mulligan",
-    "type": "Spatial",
-    "year": "2024/25",
-    "studio": "Interiors 2",
-    "caption": "A domestic room studied as a cut spatial model.",
-    "poster": "",
-    "viewer": "",
-    "consent": true,
-    "xr": true,
-    "featured": true
-  },
-  {
-    "title": "Material Palette",
-    "author": "Jack Hurley",
-    "type": "Material",
-    "year": "2024/25",
-    "studio": "Interiors 2",
-    "poster": "",
-    "viewer": "",
-    "consent": false
-  },
-  {
-    "title": "Stool Study",
-    "author": "Leah Byrne",
-    "type": "Furniture",
-    "year": "2023/24",
-    "studio": "Interiors 1",
-    "poster": "",
-    "viewer": "",
-    "consent": true
-  }
-];
+/* No sample works: an empty or missing projects.json shows the "in preparation" message. */
+const SAMPLE = [];
 
 /* ==========================================================================
    State + persistence
@@ -577,6 +548,8 @@ themeBtn.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme'
 const results=$('results'), statusEl=$('status'), searchWrap=$('search'), qInput=$('q');
 const state={ q:'', type:'All', year:'All', xr:false };
 const TYPE_HUE={ Concept:210, Site:150, Sectional:32, Detail:266, Technology:190 };
+/* 'Concept' -> 'Concept model(s)'; a type already ending in 'model' is not doubled */
+function typeLabel(type,plural){ const t=String(type||'').trim().replace(/\s+models?$/i,''); return (t?t+' ':'3D ')+(plural?'models':'model'); }
 function placeholder(type){ const h=TYPE_HUE[type]??176; return `linear-gradient(150deg, hsl(${h} 32% 26%), hsl(${h+16} 22% 15%))`; }
 
 function years(){ const s=[]; DATA.forEach(p=>{ if(p.year && !s.includes(p.year)) s.push(p.year); }); return s.sort().reverse(); }
@@ -623,9 +596,9 @@ function card(p,featured){
   const btn=document.createElement('button');
   btn.className='plate'+(featured?' featured':''); btn.type='button';
   const poster=document.createElement('div'); poster.className='poster';
-  if(p.poster){ const img=document.createElement('img'); img.src=posterSrc(p.poster); img.alt=`${p.title} by ${maskName(p.author,p.consent)}`; img.loading='lazy'; poster.appendChild(img); }
+  if(p.poster){ const img=document.createElement('img'); img.src=posterSrc(p.poster); img.alt=`${p.title} by ${maskName(p.author,p.consent)}`; img.loading='lazy'; img.onerror=()=>{ img.remove(); poster.style.background=placeholder(p.type); poster.insertAdjacentHTML('afterbegin',`<div class="ph"><div class="ph-title">${esc(p.title)}</div></div>`); }; poster.appendChild(img); }
   else { poster.style.background=placeholder(p.type); poster.innerHTML=`<div class="ph"><div class="ph-title">${esc(p.title)}</div></div>`; }
-  poster.insertAdjacentHTML('beforeend',`<span class="badge"><span class="dot"></span>${p.type?esc(p.type)+' model':'3D model'}</span>`);
+  poster.insertAdjacentHTML('beforeend',`<span class="badge"><span class="dot"></span>${esc(typeLabel(p.type))}</span>`);
   if(p.xr) poster.insertAdjacentHTML('beforeend',`<span class="badge badge-vr">${VR_ICON}VR</span>`);
   { const nd=(p.docs||[]).filter(d=>d.src).length; if(nd && p.docConsent) poster.insertAdjacentHTML('beforeend',`<span class="badge badge-doc">${nd} ${nd===1?'document':'documents'}</span>`); }
   const cap=document.createElement('div'); cap.className='caption';
@@ -644,15 +617,21 @@ function render(){
     statusEl.innerHTML=`Showing ${list.length} of ${DATA.length} models<button id="reset">Clear all</button>`;
     $('reset').onclick=()=>{ state.q=''; state.type='All'; state.year='All'; qInput.value=''; searchWrap.classList.remove('has-text'); render(); };
   } else statusEl.classList.remove('on');
+  if(DATA.length===0){ results.innerHTML=`<div class="empty"><h3>In preparation</h3><p>Work for this catalogue is being scanned and will appear here soon.</p></div>`; return; }
   if(list.length===0){ results.innerHTML=`<div class="empty"><h3>No models match</h3><p>Try a different student name, model type or year — or clear the filters to see everything.</p></div>`; return; }
   if(isDefault()){
     const feat=DATA.find(p=>p.featured);
     if(feat){ const lead=document.createElement('div'); lead.className='grid lead'; lead.appendChild(card(feat,true)); results.appendChild(lead); VISIBLE.push(feat); }
-    typesInOrder().forEach(type=>{
+    if(!GROUP_BY_TYPE){
+      const g=document.createElement('div'); g.className='grid';
+      const order=typesInOrder(), rank=p=>{ const i=order.indexOf(p.type); return i<0?order.length:i; };
+      DATA.filter(p=>!p.featured).sort((x,y)=>rank(x)-rank(y)).forEach(p=>{ g.appendChild(card(p,false)); VISIBLE.push(p); });
+      if(g.children.length) results.appendChild(g);
+    } else typesInOrder().forEach(type=>{
       const items=DATA.filter(p=>p.type===type&&!p.featured);
       if(!items.length) return;
       const sec=document.createElement('section'); sec.className='collection';
-      sec.innerHTML=`<div class="collection-head"><h2>${esc(type)} models</h2><span class="c-count">${items.length}</span></div>`;
+      sec.innerHTML=`<div class="collection-head"><h2>${esc(typeLabel(type,true))}</h2><span class="c-count">${items.length}</span></div>`;
       const g=document.createElement('div'); g.className='grid';
       items.forEach(p=>{ g.appendChild(card(p,false)); VISIBLE.push(p); });
       sec.appendChild(g); results.appendChild(sec);
@@ -908,7 +887,7 @@ function openViewer(p,trigger,stepping,fromHash){
   else vStage.innerHTML=`<div class="v-empty"><h3>This plate isn't linked to a viewer yet</h3><p>Open the admin, edit this project, and add its <code>superspl.at</code> scene link.</p></div>`;
   if(p.viewer && p.xr) vStage.insertAdjacentHTML('beforeend',`<div class="vr-flag" title="VR-ready — put on a WebXR headset and use the viewer's VR button">${VR_ICON}<span>VR ready</span></div>`);
   const meta=[['Type',p.type],['Year',p.year],['Studio',p.studio],['Scale',p.scale],['Size',p.size],['Materials',p.materials],['Captured',[p.captured,p.method].filter(Boolean).join(', ')]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('');
-  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl>${docsPanel(p)}${citePanel(p)}<p class="r-notes-h">Teaching notes</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
+  vRail.innerHTML=`<div class="r-author">${esc(maskName(p.author,p.consent))}</div><div class="r-title">${esc(p.title)}</div><dl class="v-meta">${meta}</dl>${docsPanel(p)}${citePanel(p)}<p class="r-notes-h">About this work</p><p class="r-notes${p.notes?'':' empty-note'}">${p.notes?esc(p.notes):'No notes added for this model yet.'}</p>`;
   infoOpen=window.innerWidth>760; applyInfo();
   viewer.classList.add('on'); document.body.style.overflow='hidden'; if(!stepping) $('v-close').focus();
   syncNav(); if(!fromHash) setWorkHash(p, stepping);
@@ -992,7 +971,7 @@ $('proj-form').addEventListener('submit',e=>{
   e.preventDefault();
   const p={
     author:$('f-author').value.trim(), title:$('f-title').value.trim(),
-    type:$('f-type').value.trim(), year:$('f-year').value.trim(),
+    type:$('f-type').value.trim().replace(/\s+models?$/i,''), year:$('f-year').value.trim(),
     studio:$('f-studio').value.trim(), viewer:vwr.value.trim(),
     poster:normPoster(pendingThumb), caption:$('f-caption').value.trim(),
     notes:$('f-notes').value.trim(), consent:$('f-consent').checked, xr:$('f-xr').checked, featured:$('f-featured').checked, bg:$('f-bg').value||undefined,
@@ -1072,6 +1051,8 @@ const posterSrc = v => SHOWN[v] || v || '';
 function normPoster(v){ const s=(v||'').trim(); if(!s || /^data:|[\/:]/.test(s)) return s; return POSTERS_BASE + s; }   // bare filename -> posters folder
 function slug(s){ return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'model'; }
 function dataBytes(u){ const i=u.indexOf(','), head=u.slice(0,i), bin=atob(u.slice(i+1)), a=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++) a[k]=bin.charCodeAt(k); return { bytes:a, b64:u.slice(i+1), ext:/png/.test(head)?'png':/webp/.test(head)?'webp':'jpg' }; }
+/* What gets published or exported: without consent only the masked name (first name + initial) is written to projects.json. */
+function publicData(){ return DATA.map(p=>p.consent?p:{ ...p, author:maskName(p.author,false) }); }
 function extractPosters(list){
   const used=new Set(), files=[];
   list.forEach(p=>{ if(p.poster && !p.poster.startsWith('data:')) used.add(p.poster.split('/').pop()); });
@@ -1119,7 +1100,7 @@ function makeZip(entries){
 
 /* export / import / reload */
 $('export-btn').onclick=async()=>{
-  const { json:j0, files }=extractPosters(DATA);
+  const { json:j0, files }=extractPosters(publicData());
   const { json, files:dfiles }=await extractDocs(j0);
   const entries=[{ name:`${CAT}/projects.json`, bytes:new TextEncoder().encode(JSON.stringify(json,null,2)) }, ...files.map(f=>({ name:f.repo, bytes:f.bytes })), ...dfiles.map(f=>({ name:f.repo, bytes:f.bytes }))];
   const a=document.createElement('a'); a.href=URL.createObjectURL(makeZip(entries)); a.download=`${CAT}-update.zip`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -1160,7 +1141,7 @@ $('publish-btn').onclick=async()=>{
   try{
     let sha; const gr=await fetch(`${api}?ref=${encodeURIComponent(g.branch)}`,{headers}); if(gr.ok){ sha=(await gr.json()).sha; }
     // thumbnails first, as image files beside the catalogue's posters folder
-    const { json, files }=extractPosters(DATA), prefix=g.path.split('/').slice(0,-2).map(x=>x+'/').join('');   // repo folder holding the site, usually none
+    const { json, files }=extractPosters(publicData()), prefix=g.path.split('/').slice(0,-2).map(x=>x+'/').join('');   // repo folder holding the site, usually none
     for(const f of files){
       pub(`Publishing thumbnail ${files.indexOf(f)+1} of ${files.length}…`,'busy');
       const fapi=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${(prefix+f.repo).split('/').map(encodeURIComponent).join('/')}`;
@@ -1195,7 +1176,7 @@ $('publish-btn').onclick=async()=>{
   try{ const r=await fetch('projects.json',{cache:'no-store'}); if(r.ok) data=await r.json(); }catch(e){}
   const local=read(STORE);
   if(local){ try{ const d=JSON.parse(local); if(Array.isArray(d)) data=d; }catch(e){} }
-  DATA = (Array.isArray(data)&&data.length)?data:SAMPLE.slice();
+  DATA = Array.isArray(data)?data:[];
   rebuildFilters(); render();
   goAdmin(location.hash==='#admin');
   openFromHash();

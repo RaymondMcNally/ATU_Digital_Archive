@@ -1,40 +1,5 @@
 [
   {
-    "title": "Turned Vessel",
-    "author": "Ruairí Kelly",
-    "type": "Object",
-    "year": "2024/25",
-    "studio": "Design Studio",
-    "caption": "A turned timber vessel, scanned to capture grain and form.",
-    "poster": "",
-    "viewer": "",
-    "consent": true,
-    "xr": true,
-    "featured": false
-  },
-  {
-    "title": "Stackable Chair",
-    "author": "Sadhbh Nolan",
-    "type": "Product",
-    "year": "2024/25",
-    "studio": "Design Studio",
-    "poster": "",
-    "viewer": "",
-    "consent": false,
-    "featured": false
-  },
-  {
-    "title": "Cast Series",
-    "author": "Oisín Brady",
-    "type": "Process",
-    "year": "2023/24",
-    "studio": "Design Studio",
-    "poster": "",
-    "viewer": "",
-    "consent": true,
-    "featured": false
-  },
-  {
     "author": "Edward",
     "title": "Inner Child",
     "type": "Exhibition",
