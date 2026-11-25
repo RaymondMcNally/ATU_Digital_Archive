@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ATU Digital Archive — Shared AR session</title>
+<!--
+  Shared AR session for the ATU Digital Archive.
+  Two or more Meta Quest headsets in the same room open this page, join the same room code,
+  and see the same splat model in the same physical place.
+
+  How it works
+  - Alignment: the Quest browser's experimental "shared" WebXR reference space
+    (chrome://flags → "WebXR experiments" → Enabled, then restart the browser, on EVERY headset).
+    The first headset into AR becomes the origin; the others are aligned to it automatically.
+  - Sync: PeerJS (WebRTC). The first person to open a room code is the HOST. The host picks the
+    model; everyone else is a GUEST and receives the model choice and its position automatically.
+    Anyone can grab and move the model; the host relays the change to everyone.
+  - Models stream straight from this site's models/ folder, the same .sog files the catalogues use.
+
+  URL parameters (all optional)
+    ?room=studio          room code (both headsets must use the same one)
+    &model=architecture/Zumpter.sog   preselect a model (host only), path under ../models/
+    &up=-y                which way is up in the scan (-y is the archive default)
+    &size=0.6             fit the model's longest side to this many metres when first loaded
+
+  Controls in AR (Touch controllers)
+    Trigger (hold)        grab the model and move/turn it with your hand
+    Thumbstick left/right rotate the model
+    Thumbstick up/down    scale the model
+    Each other headset appears as a small coloured marker so you can check the alignment.
+
+  Engine: PlayCanvas 2.24.1 (same version as the bundled SuperSplat viewer).
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #111; color: #eee; font: 15px/1.4 system-ui, sans-serif; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw);
+           background: rgba(20,20,24,.94); border: 1px solid #333; border-radius: 14px; padding: 22px 24px; }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .sub { color: #9a9a9a; margin: 0 0 16px; font-size: 13px; }
+  label { display: block; margin: 12px 0 4px; font-size: 13px; color: #bbb; }
+  input, select, button { font: inherit; width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+           border: 1px solid #444; background: #1c1c21; color: #eee; }
+  button { margin-top: 18px; background: #2b6cff; border-color: #2b6cff; font-weight: 600; cursor: pointer; }
+  button:disabled { background: #333; border-color: #333; color: #777; cursor: default; }
+  #status { margin-top: 14px; font-size: 13px; color: #9fd29f; white-space: pre-line; min-height: 3.6em; }
+  #status.warn { color: #f2c66d; }
+  .row { display: flex; gap: 10px; } .row > div { flex: 1; }
+  #guestNote { display: none; margin-top: 10px; font-size: 13px; color: #bbb; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>Shared AR session</h1>
+  <p class="sub">ATU Digital Archive · open this page on every headset in the room</p>
+
+  <div class="row">
+    <div>
+      <label for="room">Room code</label>
+      <input id="room" value="studio" autocomplete="off" />
+    </div>
+    <div style="flex:0 0 120px">
+      <label>&nbsp;</label>
+      <button id="join" style="margin-top:0">Join</button>
+    </div>
+  </div>
+
+  <div id="hostBox" style="display:none">
+    <label for="model">Model (you are the host)</label>
+    <select id="model"></select>
+  </div>
+  <div id="guestNote">You are a guest — the host chooses the model.</div>
+
+  <button id="enter" disabled>Enter shared AR</button>
+  <div id="status">Enter a room code and press Join.</div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script type="module">
+import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.24.1/build/playcanvas.mjs';
+
+const $ = (id) => document.getElementById(id);
+const params = new URL(location.href).searchParams;
+const CATALOGUES = ['architecture', 'creative-design', 'fine-art', 'interior-architecture'];
+const PEER_PREFIX = 'atu-digital-archive-';          // keeps our room IDs apart on the public PeerJS server
+const UP_ROTATIONS = { 'y': [0, 0, 0], '-y': [180, 0, 0], 'z': [-90, 0, 0], '-z': [90, 0, 0] };
+const fitSize = Number(params.get('size')) || 0.6;
+
+if (params.get('room')) $('room').value = params.get('room');
+
+function status(msg, warn = false) { $('status').textContent = msg; $('status').className = warn ? 'warn' : ''; }
+
+// ---------------------------------------------------------------- PlayCanvas scene
+const canvas = $('c');
+const app = new pc.Application(canvas, { graphicsDeviceOptions: { alpha: true, antialias: false } });
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
+window.addEventListener('resize', () => app.resizeCanvas());
+app.start();
+
+const rig = new pc.Entity('rig');                     // XR poses are relative to the camera's parent: keep it at the origin
+app.root.addChild(rig);
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', { clearColor: new pc.Color(0, 0, 0, 0), nearClip: 0.05, farClip: 100 });
+camera.setPosition(0, 1.6, 2);
+rig.addChild(camera);
+
+// modelRoot = the shared pose (position/rotation/scale) that every headset agrees on.
+// modelInner = the splat, re-oriented and centred so its base sits on modelRoot's origin.
+const modelRoot = new pc.Entity('modelRoot');
+modelRoot.setPosition(0, 0.8, 0);
+app.root.addChild(modelRoot);
+let modelInner = null, currentModel = null, loadToken = 0;
+
+function loadModel(path, up = '-y') {
+  if (path === currentModel) return;
+  currentModel = path;
+  const token = ++loadToken;
+  if (modelInner) { modelInner.destroy(); modelInner = null; }
+  const url = '../models/' + path.split('/').map(encodeURIComponent).join('/');
+  status('Loading ' + path.split('/').pop() + ' …');
+  const asset = new pc.Asset(path, 'gsplat', { url });
+  app.assets.add(asset);
+  asset.once('error', (e) => status('Could not load the model: ' + e, true));
+  asset.ready(() => {
+    if (token !== loadToken) return;                  // a newer choice arrived while this loaded
+    const inner = new pc.Entity('splat');
+    inner.addComponent('gsplat', { asset });
+    const rot = UP_ROTATIONS[up] ?? UP_ROTATIONS['-y'];
+    inner.setLocalEulerAngles(rot[0], rot[1], rot[2]);
+
+    // centre the model on the pivot, with its lowest point on the pivot
+    const local = asset.resource.aabb;
+    const m = new pc.Mat4().setTRS(pc.Vec3.ZERO, inner.getLocalRotation(), pc.Vec3.ONE);
+    const box = new pc.BoundingBox(); box.setFromTransformedAabb(local, m);
+    inner.setLocalPosition(-box.center.x, -box.center.y + box.halfExtents.y, -box.center.z);
+
+    // fit the longest side to fitSize metres (only the host sets scale; guests get it from the host)
+    if (isHost && !hasPlacedOnce) {
+      const longest = 2 * Math.max(box.halfExtents.x, box.halfExtents.y, box.halfExtents.z) || 1;
+      modelRoot.setLocalScale(fitSize / longest, fitSize / longest, fitSize / longest);
+      broadcastModel();
+    }
+    modelRoot.addChild(inner);
+    modelInner = inner;
+    status(statusLine());
+  });
+  app.assets.load(asset);
+}
+
+// markers for the other headsets
+const peerMarkers = {};
+const MARKER_COLOURS = [[1, .45, .2], [.3, .8, 1], [.6, 1, .4], [1, .4, .8], [1, .9, .3]];
+function markerFor(id) {
+  if (peerMarkers[id]) return peerMarkers[id];
+  const mat = new pc.StandardMaterial();
+  const c = MARKER_COLOURS[Object.keys(peerMarkers).length % MARKER_COLOURS.length];
+  mat.diffuse = new pc.Color(...c); mat.emissive = new pc.Color(...c); mat.update();
+  const e = new pc.Entity('peer-' + id);
+  e.addComponent('render', { type: 'box', material: mat });
+  e.setLocalScale(0.16, 0.08, 0.1);                   // roughly headset-sized block
+  app.root.addChild(e);
+  peerMarkers[id] = e;
+  return e;
+}
+function removeMarker(id) { if (peerMarkers[id]) { peerMarkers[id].destroy(); delete peerMarkers[id]; } }
+
+// ---------------------------------------------------------------- networking (PeerJS)
+let peer = null, isHost = false, hostConn = null, hasPlacedOnce = false;
+const guests = {};                                    // host only: peerId -> DataConnection
+
+function send(conn, msg) { if (conn && conn.open) conn.send(msg); }
+function toAllGuests(msg, exceptId) { for (const [id, c] of Object.entries(guests)) if (id !== exceptId) send(c, msg); }
+
+function modelState() {
+  const p = modelRoot.getPosition(), r = modelRoot.getRotation(), s = modelRoot.getLocalScale().x;
+  return { t: 'model', path: currentModel, up: currentUp, p: [p.x, p.y, p.z], r: [r.x, r.y, r.z, r.w], s };
+}
+function applyModelState(m) {
+  if (m.path && (m.path !== currentModel || m.up !== currentUp)) { currentUp = m.up; currentModel = null; loadModel(m.path, m.up); }
+  modelRoot.setPosition(m.p[0], m.p[1], m.p[2]);
+  modelRoot.setRotation(m.r[0], m.r[1], m.r[2], m.r[3]);
+  modelRoot.setLocalScale(m.s, m.s, m.s);
+  hasPlacedOnce = true;
+}
+function broadcastModel() {
+  if (!peer || !currentModel) return;
+  const msg = modelState();
+  if (isHost) toAllGuests(msg); else send(hostConn, msg);
+}
+
+function handleMessage(fromId, msg) {
+  if (msg.t === 'model') {
+    applyModelState(msg);
+    if (isHost) toAllGuests(msg, fromId);              // relay a guest's move to the other guests
+  } else if (msg.t === 'head') {
+    const id = msg.id ?? fromId;
+    if (id === peer.id) return;
+    const m = markerFor(id);
+    m.setPosition(msg.p[0], msg.p[1], msg.p[2]);
+    m.setRotation(msg.r[0], msg.r[1], msg.r[2], msg.r[3]);
+    if (isHost) toAllGuests({ ...msg, id }, fromId);
+  } else if (msg.t === 'leave') {
+    removeMarker(msg.id);
+  }
+}
+
+function join() {
+  const room = $('room').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '') || 'studio';
+  $('room').value = room;
+  $('join').disabled = true;
+  status('Connecting to room "' + room + '" …');
+  const hostId = PEER_PREFIX + room;
+
+  // try to claim the room as host; if the ID is taken, someone is already hosting → join as guest
+  peer = new Peer(hostId);
+  peer.on('open', () => { isHost = true; becameHost(); });
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') {
+      peer.destroy();
+      peer = new Peer();
+      peer.on('open', () => becomeGuest(hostId));
+      peer.on('error', (e) => status('Network error: ' + e.type + '\nIf this keeps happening the campus Wi-Fi may be blocking WebRTC.', true));
+    } else if (err.type === 'peer-unavailable') {
+      status('The host has left this room. Reload the page to host it yourself.', true);
+    } else {
+      status('Network error: ' + err.type, true);
+      $('join').disabled = false;
+    }
+  });
+}
+
+function becameHost() {
+  $('hostBox').style.display = 'block';
+  $('enter').disabled = false;
+  status(statusLine());
+  peer.on('connection', (conn) => {
+    conn.on('open', () => {
+      guests[conn.peer] = conn;
+      if (currentModel) send(conn, modelState());
+      status(statusLine());
+    });
+    conn.on('data', (msg) => handleMessage(conn.peer, msg));
+    conn.on('close', () => { delete guests[conn.peer]; removeMarker(conn.peer); toAllGuests({ t: 'leave', id: conn.peer }); status(statusLine()); });
+  });
+  populateModels();
+}
+
+function becomeGuest(hostId) {
+  $('guestNote').style.display = 'block';
+  hostConn = peer.connect(hostId, { reliable: true });
+  hostConn.on('open', () => { $('enter').disabled = false; status(statusLine()); });
+  hostConn.on('data', (msg) => handleMessage(hostId, msg));
+  hostConn.on('close', () => { removeMarker(hostId); status('The host left the session.', true); });
+}
+
+function statusLine() {
+  const who = isHost ? 'Host' : 'Guest';
+  const n = isHost ? Object.keys(guests).length : (hostConn?.open ? 1 : 0);
+  const others = isHost ? `${n} guest${n === 1 ? '' : 's'} connected` : (n ? 'connected to host' : 'waiting for host');
+  const model = currentModel ? '\nModel: ' + currentModel.split('/').pop() : (isHost ? '\nChoose a model.' : '\nWaiting for the host to choose a model.');
+  const xr = app.xr.active ? `\nAR: ${spaceMode === 'shared' ? 'shared space ✓' : 'NOT shared — check the WebXR experiments flag'}` : '';
+  return `${who} · room "${$('room').value}" · ${others}${model}${xr}`;
+}
+
+// ---------------------------------------------------------------- model list from the catalogues
+let currentUp = params.get('up') || '-y';
+async function populateModels() {
+  const sel = $('model');
+  sel.innerHTML = '<option value="">— choose a model —</option>';
+  for (const cat of CATALOGUES) {
+    try {
+      const list = await (await fetch(`../${cat}/projects.json`, { cache: 'no-cache' })).json();
+      const group = document.createElement('optgroup');
+      group.label = cat.replace('-', ' ');
+      for (const p of list) {
+        const v = (p.viewer || '').trim();
+        if (!p.consent || p.xr === false || !/\.sog$/i.test(v) || /^https?:/i.test(v)) continue;
+        const opt = document.createElement('option');
+        opt.value = `${cat}/${v.split('/').pop()}`;
+        opt.dataset.up = p.introUp || '-y';
+        opt.textContent = `${p.title} — ${p.author}`;
+        group.appendChild(opt);
+      }
+      if (group.children.length) sel.appendChild(group);
+    } catch { /* catalogue missing or empty: skip it */ }
+  }
+  const pre = params.get('model');
+  if (pre) { sel.value = pre; if (sel.value) chooseModel(); else { currentModel = null; loadModel(pre, currentUp); } }
+}
+function chooseModel() {
+  const opt = $('model').selectedOptions[0];
+  if (!opt || !opt.value) return;
+  currentUp = params.get('up') || opt.dataset.up || '-y';
+  hasPlacedOnce = false;
+  loadModel(opt.value, currentUp);
+}
+$('model').addEventListener('change', chooseModel);
+$('join').addEventListener('click', join);
+$('room').addEventListener('keydown', (e) => { if (e.key === 'Enter') join(); });
+
+// ---------------------------------------------------------------- WebXR
+let spaceMode = null;
+$('enter').addEventListener('click', () => {
+  if (!app.xr.isAvailable(pc.XRTYPE_AR)) { status('Immersive AR is not available in this browser. Open this page in the Quest browser.', true); return; }
+  // 'shared' is the Quest browser's experimental colocation space; fall back to local-floor if it is not enabled
+  app.xr.start(camera.camera, pc.XRTYPE_AR, 'shared', {
+    callback: (err) => {
+      if (!err) { spaceMode = 'shared'; return; }
+      app.xr.start(camera.camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+        callback: (err2) => { if (err2) status('Could not start AR: ' + err2.message, true); else spaceMode = 'local-floor'; }
+      });
+    }
+  });
+});
+app.xr.on('start', () => {
+  $('panel').style.display = 'none';
+  // the host places a freshly chosen model 1 m in front of where they are looking
+  setTimeout(() => {
+    if (isHost && !hasPlacedOnce && currentModel) {
+      const f = camera.forward.clone(); f.y = 0; f.normalize();
+      const p = camera.getPosition();
+      modelRoot.setPosition(p.x + f.x, Math.max(0.6, p.y - 0.6), p.z + f.z);
+      hasPlacedOnce = true;
+      broadcastModel();
+    }
+  }, 1500);                                           // give the shared space a moment to settle (it may reset once)
+});
+app.xr.on('end', () => { $('panel').style.display = 'block'; spaceMode = null; status(statusLine()); });
+
+// grab with the trigger, rotate/scale with the thumbstick
+let grab = null;                                      // { src, offPos, offRot }
+app.xr.input.on('selectstart', (src) => {
+  if (!src.grip && !src.hand) return;
+  const cRot = src.getRotation(), cPos = src.getPosition();
+  const inv = cRot.clone().invert();
+  const offPos = inv.transformVector(modelRoot.getPosition().clone().sub(cPos));
+  const offRot = inv.clone().mul(modelRoot.getRotation());
+  grab = { src, offPos, offRot };
+});
+app.xr.input.on('selectend', (src) => { if (grab && grab.src === src) { grab = null; broadcastModel(); } });
+
+let lastHeadSent = 0, lastModelSent = 0;
+app.on('update', (dt) => {
+  if (!app.xr.active) return;
+  let changed = false;
+
+  if (grab) {
+    const cRot = grab.src.getRotation(), cPos = grab.src.getPosition();
+    if (cRot && cPos) {
+      modelRoot.setRotation(cRot.clone().mul(grab.offRot));
+      modelRoot.setPosition(cPos.clone().add(cRot.transformVector(grab.offPos)));
+      changed = true;
+    }
+  }
+  for (const src of app.xr.input.inputSources) {
+    const gp = src.gamepad;
+    if (!gp || gp.axes.length < 4) continue;
+    const x = gp.axes[2], y = gp.axes[3];
+    if (Math.abs(x) > 0.2) { const q = new pc.Quat().setFromEulerAngles(0, -x * 60 * dt, 0); modelRoot.setRotation(q.mul(modelRoot.getRotation())); changed = true; }
+    if (Math.abs(y) > 0.2) { const s = modelRoot.getLocalScale().x * (1 - y * dt); const c = Math.min(Math.max(s, 0.001), 50); modelRoot.setLocalScale(c, c, c); changed = true; }
+  }
+
+  const now = performance.now();
+  if (changed && now - lastModelSent > 66) { lastModelSent = now; hasPlacedOnce = true; broadcastModel(); }   // ~15 updates/s while moving
+  if (peer && now - lastHeadSent > 100) {                                                                    // head pose ~10/s
+    lastHeadSent = now;
+    const p = camera.getPosition(), r = camera.getRotation();
+    const msg = { t: 'head', id: peer.id, p: [p.x, p.y, p.z], r: [r.x, r.y, r.z, r.w] };
+    if (isHost) toAllGuests(msg); else send(hostConn, msg);
+  }
+});
+</script>
+</body>
+</html>
